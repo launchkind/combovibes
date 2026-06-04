@@ -12,6 +12,11 @@ const Header = () => {
     <header className="bg-[#F2F0F1] pt-10 md:pt-24 overflow-hidden">
       <div className="md:max-w-frame mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
         <section className="max-w-frame px-4">
+          <div className="mb-6">
+            <p className="text-xs md:text-sm tracking-widest uppercase mb-3 text-gray-600">
+              NEW SEASON 2026
+            </p>
+          </div>
           <motion.h2
             initial={{ y: "100px", opacity: 0, rotate: 10 }}
             whileInView={{ y: "0", opacity: 1, rotate: 0 }}
@@ -19,33 +24,38 @@ const Header = () => {
             transition={{ duration: 0.6 }}
             className={cn([
               integralCF.className,
-              "text-4xl lg:text-[64px] lg:leading-[64px] mb-5 lg:mb-8",
+              "text-5xl lg:text-[64px] lg:leading-[1.1] mb-6 lg:mb-8 font-black",
             ])}
           >
-            FIND CLOTHES THAT MATCHES YOUR STYLE
+            MOVE DIFFERENT.<br />BE DIFFERENT.
           </motion.h2>
           <motion.p
             initial={{ y: "100px", opacity: 0 }}
             whileInView={{ y: "0", opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-black/60 text-sm lg:text-base mb-6 lg:mb-8 max-w-[545px]"
+            className="text-black/70 text-sm lg:text-base mb-8 max-w-[545px] leading-relaxed"
           >
-            Browse through our diverse range of meticulously crafted garments,
-            designed to bring out your individuality and cater to your sense of
-            style.
+            Premium streetwear crafted for those who lead, not follow.
           </motion.p>
           <motion.div
             initial={{ y: "100px", opacity: 0 }}
             whileInView={{ y: "0", opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 1, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 mb-12"
           >
             <Link
               href="/shop"
-              className="w-full md:w-52 mb-5 md:mb-12 inline-block text-center bg-black hover:bg-black/80 transition-all text-white px-14 py-4 rounded-full hover:animate-pulse"
+              className="inline-block text-center bg-black hover:bg-black/80 transition-all text-white px-8 py-3 text-sm font-semibold"
             >
-              Shop Now
+              SHOP MEN
+            </Link>
+            <Link
+              href="/shop"
+              className="inline-block text-center border-2 border-black hover:bg-black/5 transition-all text-black px-8 py-3 text-sm font-semibold"
+            >
+              SHOP WOMEN
             </Link>
           </motion.div>
           <motion.div

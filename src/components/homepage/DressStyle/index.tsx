@@ -2,59 +2,66 @@ import { cn } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
 import React from "react";
 import * as motion from "framer-motion/client";
-import DressStyleCard from "./DressStyleCard";
 
 const DressStyle = () => {
   return (
     <div className="px-4 xl:px-0">
-      <section className="max-w-frame mx-auto bg-[#F0F0F0] px-6 pb-6 pt-10 md:p-[70px] rounded-[40px] text-center">
-        <motion.h2
-          initial={{ y: "100px", opacity: 0 }}
-          whileInView={{ y: "0", opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className={cn([
-            integralCF.className,
-            "text-[32px] leading-[36px] md:text-5xl mb-8 md:mb-14 capitalize",
-          ])}
-        >
-          BROWSE BY dress STYLE
-        </motion.h2>
+      <section className="max-w-frame mx-auto bg-white px-4 py-12 md:py-20">
+        <div className="flex justify-between items-center mb-8 md:mb-12">
+          <motion.h2
+            initial={{ y: "100px", opacity: 0 }}
+            whileInView={{ y: "0", opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className={cn([
+              integralCF.className,
+              "text-[32px] leading-[36px] md:text-4xl capitalize font-bold",
+            ])}
+          >
+            EXPLORE OUR COLLECTIONS
+          </motion.h2>
+          <a href="#" className="text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+            VIEW ALL CATEGORIES <span>→</span>
+          </a>
+        </div>
         <motion.div
           initial={{ y: "100px", opacity: 0 }}
           whileInView={{ y: "0", opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.6, duration: 0.6 }}
-          className="flex flex-col sm:flex-row md:h-[289px] space-y-4 sm:space-y-0 sm:space-x-5 mb-4 sm:mb-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
         >
-          <DressStyleCard
-            title="Casual"
-            url="/shop#casual"
-            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-1.png')]"
-          />
-          <DressStyleCard
-            title="Formal"
-            url="/shop#formal"
-            className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-2.png')]"
-          />
-        </motion.div>
-        <motion.div
-          initial={{ y: "100px", opacity: 0 }}
-          whileInView={{ y: "0", opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 1, duration: 0.6 }}
-          className="flex flex-col sm:flex-row md:h-[289px] space-y-5 sm:space-y-0 sm:space-x-5"
-        >
-          <DressStyleCard
-            title="Party"
-            url="/shop#party"
-            className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-3.png')]"
-          />
-          <DressStyleCard
-            title="Gym"
-            url="/shop#gym"
-            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-4.png')]"
-          />
+          {/* Category cards */}
+          {[
+            { name: "HOODIES", img: "/images/pic1.png" },
+            { name: "JACKETS", img: "/images/pic2.png" },
+            { name: "JEANS", img: "/images/pic3.png" },
+            { name: "T-SHIRTS", img: "/images/pic4.png" },
+            { name: "SHIRTS", img: "/images/pic5.png" },
+            { name: "SNEAKERS", img: "/images/pic6.png" },
+          ].map((category, idx) => (
+            <motion.a
+              key={category.name}
+              href="/shop"
+              initial={{ y: "50px", opacity: 0 }}
+              whileInView={{ y: "0", opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 * idx, duration: 0.6 }}
+              className="group relative overflow-hidden rounded-lg aspect-square flex items-end justify-start p-4 bg-gray-200 hover:shadow-lg transition-all duration-300"
+              style={{
+                backgroundImage: `url('${category.img}')`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-all duration-300" />
+              <h3 className="text-white font-bold text-lg md:text-xl relative z-10 group-hover:translate-x-1 transition-transform">
+                {category.name}
+                <br />
+                <span className="text-xs md:text-sm font-normal">SHOP NOW</span>
+              </h3>
+            </motion.a>
+          ))}
         </motion.div>
       </section>
     </div>
