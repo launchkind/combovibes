@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FaMinus, FaPlus } from "react-icons/fa6";
+import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CartCounterProps = {
@@ -53,7 +53,7 @@ const CartCounter = ({
         className="h-5 w-5 sm:h-6 sm:w-6 text-xl hover:bg-transparent"
         onClick={() => remove()}
       >
-        <FaMinus />
+        <Minus className="h-3 w-3" />
       </Button>
       <span className="font-medium text-sm sm:text-base">
         {!isZeroDelete ? counter : initialValue}
@@ -65,7 +65,7 @@ const CartCounter = ({
         className="h-5 w-5 sm:h-6 sm:w-6 text-xl hover:bg-transparent"
         onClick={() => addToCart()}
       >
-        <FaPlus />
+        <Plus className="h-3 w-3" />
       </Button>
     </div>
   );
