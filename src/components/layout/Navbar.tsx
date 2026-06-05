@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { SearchPalette } from "@/components/search/SearchPalette";
 
 const categories = [
   { label: "Flowers", href: "/category/flowers" },
@@ -34,6 +35,18 @@ export function Navbar() {
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchPaletteOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border shadow-sm">
@@ -70,16 +83,17 @@ export function Navbar() {
             </Link>
           </nav>
 
-          {/* Search bar (desktop) */}
-          <div className="hidden md:flex flex-1 max-w-sm">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search gifts, flowers, cakes..."
-                className="pl-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-              />
-            </div>
-          </div>
+          {/* Search trigger (desktop) */}
+          <button
+            onClick={() => setSearchPaletteOpen(true)}
+            className="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-muted/50 hover:bg-muted rounded-lg px-3 h-9 text-sm text-muted-foreground transition-colors"
+          >
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="flex-1 text-left">Search gifts, flowers, cakes...</span>
+            <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-background px-1.5 text-[10px]">
+              ⌘K
+            </kbd>
+          </button>
 
           {/* Actions */}
           <div className="flex items-center gap-1">
@@ -88,7 +102,7 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               className="md:hidden"
-              onClick={() => setSearchOpen((v) => !v)}
+              onClick={() => setSearchPaletteOpen(true)}
             >
               <Search className="h-5 w-5" />
             </Button>
@@ -128,20 +142,8 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile search bar */}
-        {searchOpen && (
-          <div className="md:hidden pb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search gifts, flowers, cakes..."
-                className="pl-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-                autoFocus
-              />
-            </div>
-          </div>
-        )}
       </div>
+      <SearchPalette open={searchPaletteOpen} onClose={() => setSearchPaletteOpen(false)} />
     </header>
   );
 }
