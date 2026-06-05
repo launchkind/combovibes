@@ -1,47 +1,40 @@
-import {
-  newArrivalsData,
-  relatedProductData,
-  topSellingData,
-} from "@/app/page";
-import ProductListSec from "@/components/common/ProductListSec";
-import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
-import Header from "@/components/product-page/Header";
-import Tabs from "@/components/product-page/Tabs";
-import { Product } from "@/types/product.types";
 import { notFound } from "next/navigation";
+import { mockProducts } from "@/lib/mockData";
+import { ProductDetailClient } from "@/components/product/ProductDetailClient";
+import { ProductCard } from "@/components/product/ProductCard";
+import type { Metadata } from "next";
 
-const data: Product[] = [
-  ...newArrivalsData,
-  ...topSellingData,
-  ...relatedProductData,
-];
+type Props = { params: Promise<{ slug: string[] }> };
 
-export default function ProductPage({
-  params,
-}: {
-  params: { slug: string[] };
-}) {
-  const productData = data.find(
-    (product) => product.id === Number(params.slug[0])
-  );
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const product = mockProducts.find((p) => p.slug === slug[0]);
+  if (!product) return { title: "Product Not Found" };
+  return { title: product.name, description: `Buy ${product.name} — delivered across India` };
+}
 
-  if (!productData?.title) {
-    notFound();
-  }
+export default async function ProductPage({ params }: Props) {
+  const { slug } = await params;
+  const product = mockProducts.find((p) => p.slug === slug[0]);
+  if (!product) notFound();
+
+  const related = mockProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
-    <main>
-      <div className="max-w-frame mx-auto px-4 xl:px-0">
-        <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
-        <BreadcrumbProduct title={productData?.title ?? "product"} />
-        <section className="mb-11">
-          <Header data={productData} />
-        </section>
-        <Tabs />
-      </div>
-      <div className="mb-[50px] sm:mb-20">
-        <ProductListSec title="You might also like" data={relatedProductData} />
-      </div>
-    </main>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ProductDetailClient product={product} />
+
+      {/* Related products */}
+      <section className="mt-16">
+        <h2 className="font-playfair text-2xl font-semibold text-foreground mb-6">
+          You May Also Like
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6">
+          {related.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
