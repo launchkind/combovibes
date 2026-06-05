@@ -1,43 +1,25 @@
-import Image from "next/image";
 import React from "react";
 
-const brandsData: { id: string; srcUrl: string }[] = [
-  {
-    id: "versace",
-    srcUrl: "/icons/versace-logo.svg",
-  },
-  {
-    id: "zara",
-    srcUrl: "/icons/zara-logo.svg",
-  },
-  {
-    id: "gucci",
-    srcUrl: "/icons/gucci-logo.svg",
-  },
-  {
-    id: "prada",
-    srcUrl: "/icons/prada-logo.svg",
-  },
-  {
-    id: "calvin-klein",
-    srcUrl: "/icons/calvin-klein-logo.svg",
-  },
+const trustItems = [
+  { icon: "🚚", label: "Same-Day Delivery" },
+  { icon: "🎁", label: "Handcrafted Gifts" },
+  { icon: "💳", label: "Secure Payments" },
+  { icon: "📞", label: "24/7 Support" },
+  { icon: "⭐", label: "4.8★ Rated" },
 ];
 
 const Brands = () => {
   return (
     <div className="bg-black">
-      <div className="max-w-frame mx-auto flex flex-wrap items-center justify-center md:justify-between py-5 md:py-0 sm:px-4 xl:px-0 space-x-7">
-        {brandsData.map((brand) => (
-          <Image
-            key={brand.id}
-            priority
-            src={brand.srcUrl}
-            height={0}
-            width={0}
-            alt={brand.id}
-            className="h-auto w-auto max-w-[116px] lg:max-w-48 max-h-[26px] lg:max-h-9 my-5 md:my-11"
-          />
+      <div className="max-w-frame mx-auto flex flex-wrap items-center justify-center md:justify-between py-4 md:py-0 px-4 xl:px-0 gap-4 md:gap-0">
+        {trustItems.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center gap-2 text-white my-4 md:my-10"
+          >
+            <span className="text-xl">{item.icon}</span>
+            <span className="text-sm font-semibold tracking-wide">{item.label}</span>
+          </div>
         ))}
       </div>
     </div>

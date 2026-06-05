@@ -17,54 +17,54 @@ import CartBtn from "./CartBtn";
 const data: NavMenu = [
   {
     id: 1,
-    label: "Shop",
+    label: "Gifts",
     type: "MenuList",
     children: [
       {
         id: 11,
-        label: "Men's clothes",
-        url: "/shop#men-clothes",
-        description: "In attractive and spectacular colors and designs",
+        label: "Flowers & Bouquets",
+        url: "/shop#flowers",
+        description: "Fresh flowers delivered same day",
       },
       {
         id: 12,
-        label: "Women's clothes",
-        url: "/shop#women-clothes",
-        description: "Ladies, your style and tastes are important to us",
+        label: "Cakes & Desserts",
+        url: "/shop#cakes",
+        description: "Custom cakes for every occasion",
       },
       {
         id: 13,
-        label: "Kids clothes",
-        url: "/shop#kids-clothes",
-        description: "For all ages, with happy and beautiful colors",
+        label: "Chocolates",
+        url: "/shop#chocolates",
+        description: "Premium chocolate gift boxes",
       },
       {
         id: 14,
-        label: "Bags and Shoes",
-        url: "/shop#bag-shoes",
-        description: "Suitable for men, women and all tastes and styles",
+        label: "Gift Hampers",
+        url: "/shop#hampers",
+        description: "Curated hampers for everyone",
       },
     ],
   },
   {
     id: 2,
     type: "MenuItem",
-    label: "On Sale",
-    url: "/shop#on-sale",
+    label: "Same-Day",
+    url: "/shop#same-day",
     children: [],
   },
   {
     id: 3,
     type: "MenuItem",
-    label: "New Arrivals",
-    url: "/shop#new-arrivals",
+    label: "Occasions",
+    url: "/shop#occasions",
     children: [],
   },
   {
     id: 4,
     type: "MenuItem",
-    label: "Brands",
-    url: "/shop#brands",
+    label: "Bestsellers",
+    url: "/shop#bestsellers",
     children: [],
   },
 ];
@@ -84,7 +84,7 @@ const TopNavbar = () => {
               "text-2xl lg:text-[32px] mb-2 mr-3 lg:mr-10",
             ])}
           >
-            MAMRON
+            COMBOVIBES
           </Link>
         </div>
         <NavigationMenu className="hidden md:flex mr-2 lg:mr-7">

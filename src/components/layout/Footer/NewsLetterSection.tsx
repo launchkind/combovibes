@@ -14,7 +14,7 @@ const NewsLetterSection = () => {
           "font-bold text-[32px] md:text-[40px] text-white mb-9 md:mb-0",
         ])}
       >
-        STAY UP TO DATE ABOUT OUR LATEST OFFERS
+        GET GIFT IDEAS & EXCLUSIVE OFFERS
       </p>
       <div className="flex items-center">
         <div className="flex flex-col w-full max-w-[349px] mx-auto">
