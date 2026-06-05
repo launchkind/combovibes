@@ -1,10 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MapPin, CalendarDays, MessageSquareHeart, Lock } from "lucide-react";
+import { ChevronLeft, MapPin, CalendarDays, MessageSquareHeart } from "lucide-react";
 import { formatPrice } from "@/lib/formatters";
 import { cartTotal, type CartItem } from "@/store/cartStore";
 import type { CheckoutData } from "@/app/checkout/page";
+import { PaymentButton } from "@/components/checkout/PaymentButton";
 
 type Props = {
   data: CheckoutData;
@@ -92,9 +93,17 @@ export function ReviewStep({ data, items, couponDiscount, onBack, onPlaceOrder }
         <Button variant="outline" className="rounded-full" onClick={onBack}>
           <ChevronLeft className="mr-2 h-4 w-4" /> Back
         </Button>
-        <Button className="flex-1 rounded-full shadow-warm" size="lg" onClick={onPlaceOrder}>
-          <Lock className="mr-2 h-4 w-4" /> Place Order · {formatPrice(total)}
-        </Button>
+        <div className="flex-1">
+          <PaymentButton
+            amount={total}
+            customerName={data.address?.name}
+            customerPhone={data.address?.phone}
+            onSuccess={(paymentId, orderId, signature) => {
+              onPlaceOrder();
+            }}
+            onDemoSuccess={onPlaceOrder}
+          />
+        </div>
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
