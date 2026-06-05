@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { TopBanner } from "@/components/layout/TopBanner";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
           <Navbar />
           <main>{children}</main>
           <Footer />
+          <CartDrawer />
         </Providers>
         <Toaster position="top-center" richColors />
       </body>

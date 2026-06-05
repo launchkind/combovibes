@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SearchPalette } from "@/components/search/SearchPalette";
+import { useCartStore } from "@/store/cartStore";
 
 const categories = [
   { label: "Flowers", href: "/category/flowers" },
@@ -36,6 +37,7 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchPaletteOpen, setSearchPaletteOpen] = useState(false);
+  const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -119,14 +121,18 @@ export function Navbar() {
               </Link>
             </Button>
 
-            <Button variant="ghost" size="icon" className="relative" asChild>
-              <Link href="/cart" aria-label="Cart">
-                <ShoppingBag className="h-5 w-5" />
+            <button
+              onClick={() => useCartStore.getState().setOpen(true)}
+              className="relative inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+              aria-label="Cart"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                  0
+                  {cartCount > 9 ? "9+" : cartCount}
                 </span>
-              </Link>
-            </Button>
+              )}
+            </button>
 
             {/* Mobile menu */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
