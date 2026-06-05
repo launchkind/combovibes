@@ -2,87 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Combovibes Design Tokens ─── */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* Brand */
+  --brand-red: 232 41 75;          /* #E8294B */
+  --brand-red-dark: 196 30 58;     /* #C41E3A */
+  --brand-red-light: 255 232 236;  /* #FFE8EC */
+  --brand-pink: 255 107 138;       /* #FF6B8A */
+  --brand-cream: 255 251 247;      /* #FFFBF7 */
+
+  /* UI tokens */
+  --cv-charcoal: 26 26 26;         /* #1A1A1A */
+  --cv-gray: 85 85 85;             /* #555555 */
+  --cv-gray-light: 136 136 136;    /* #888888 */
+  --cv-border: 232 232 232;        /* #E8E8E8 */
+  --cv-bg-page: 250 250 250;       /* #FAFAFA */
+  --cv-green: 46 125 50;           /* #2E7D32 */
+  --cv-green-bg: 232 245 233;      /* #E8F5E9 */
+  --cv-gold: 201 168 76;           /* #C9A84C */
+
+  /* shadcn/radix semantic tokens — Combovibes tuned */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 349 78% 54%;          /* brand red */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 10%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 0 0% 96%;
+  --accent-foreground: 0 0% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 91%;
+  --input: 0 0% 91%;
+  --ring: 349 78% 54%;
+  --radius: 0.5rem;
+
+  /* Charts */
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+/* ─── Base Styles ─── */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-cv-charcoal;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #E8294B;
+  }
+
+  /* Selection color */
+  ::selection {
+    background-color: #FFE8EC;
+    color: #E8294B;
   }
 }
 
+/* ─── Component Utilities ─── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-}
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  /* Brand button */
+  .btn-brand {
+    @apply bg-cv-red text-white font-semibold px-6 py-3 rounded-lg hover:bg-cv-red-hover transition-colors duration-200 shadow-sm;
+  }
+
+  .btn-brand-outline {
+    @apply border-2 border-cv-red text-cv-red font-semibold px-6 py-3 rounded-lg hover:bg-cv-red-bg transition-colors duration-200;
+  }
+
+  /* Card styles */
+  .card-product {
+    @apply bg-white rounded-xl border border-cv-border shadow-card hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  /* Section header */
+  .section-title {
+    @apply text-xl md:text-2xl font-bold text-cv-charcoal uppercase tracking-tight;
+  }
+
+  /* Price display */
+  .price-current {
+    @apply text-cv-red font-bold text-base;
+  }
+
+  .price-original {
+    @apply text-cv-gray-light line-through text-sm;
+  }
+
+  /* Delivery badge */
+  .badge-delivery {
+    @apply text-xs font-medium text-cv-green bg-cv-green-bg px-2 py-0.5 rounded-full;
+  }
+
+  /* Discount badge */
+  .badge-discount {
+    @apply text-xs font-bold text-white bg-cv-red px-2 py-0.5 rounded;
   }
 }
