@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { playfair, inter } from "@/styles/fonts";
 import { Toaster } from "sonner";
 import { Providers } from "./providers";
+import { TopBanner } from "@/components/layout/TopBanner";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -23,7 +26,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${playfair.variable} ${inter.variable} font-inter antialiased`}>
         <Providers>
-          {children}
+          <TopBanner />
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
         </Providers>
         <Toaster position="top-center" richColors />
       </body>
