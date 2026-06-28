@@ -1,8 +1,11 @@
 import { Resend } from "resend";
 import type { Order } from "@/types/order.types";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
-const FROM   = process.env.FROM_EMAIL ?? "noreply@combovibes.com";
+const FROM = process.env.FROM_EMAIL ?? "noreply@combovibes.com";
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!);
+}
 
 const SLOT_LABELS: Record<string, string> = {
   morning:  "8 AM – 12 PM",
@@ -69,7 +72,7 @@ function buildConfirmationHtml(order: Order): string {
 
 export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from:    FROM,
       to:      order.sender_email,
       subject: `Order Confirmed ✅ – ${order.order_number} | Combovibes`,
@@ -86,7 +89,7 @@ export async function sendShippedEmail(order: Order): Promise<void> {
       ? `<p style="font-size:14px">Track your package: <a href="${order.tracking_url}" style="color:#D81B60">${order.courier_name}</a> — AWB: <strong>${order.awb_code}</strong></p>`
       : `<p style="font-size:14px">AWB code: <strong>${order.awb_code}</strong> via ${order.courier_name}</p>`;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from:    FROM,
       to:      order.sender_email,
       subject: `Your gift is on the way! 🚀 – ${order.order_number} | Combovibes`,
