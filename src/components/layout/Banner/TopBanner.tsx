@@ -1,18 +1,53 @@
 import React from "react";
+import { MapPin, Phone, Mail } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-const TopBanner = () => {
+async function fetchSettings() {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.from("site_settings").select("key, value");
+    if (!data) return {};
+    return Object.fromEntries(data.map((r) => [r.key, r.value]));
+  } catch {
+    return {};
+  }
+}
+
+const TopBanner = async () => {
+  const settings = await fetchSettings();
+  const bannerText = settings.banner_text ?? "Welcome to Combo Vibes – Style Meets Gifting ✨";
+  const address    = settings.address ?? "";
+  const phone      = settings.phone   ?? "";
+  const email      = settings.email   ?? "";
+
   return (
-    <div className="bg-red-500 text-white py-2.5 px-4 xl:px-0">
-      <div className="max-w-frame mx-auto flex flex-col sm:flex-row items-center justify-between text-center sm:text-left text-xs sm:text-sm gap-2 sm:gap-4">
-        <p className="flex items-center justify-center sm:justify-start gap-2 font-medium">
-          <span>🚚</span> FREE DELIVERY ON ORDERS OVER ₹999
+    <div className="bg-[#C2185B] text-white text-xs py-2 px-4">
+      <div className="max-w-frame mx-auto flex items-center justify-between gap-2">
+        {address && (
+          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+            <MapPin className="w-3 h-3" />
+            <span>{address}</span>
+          </div>
+        )}
+
+        <p className="flex-1 text-center font-medium tracking-wide text-[11px] sm:text-xs">
+          {bannerText}
         </p>
-        <p className="flex items-center justify-center gap-2 font-semibold tracking-wide">
-          <span>⏰</span> ORDER BEFORE 2 PM FOR SAME-DAY DELIVERY
-        </p>
-        <p className="flex items-center justify-center sm:justify-end gap-2 font-medium">
-          <span>🎁</span> ADD A FREE GREETING CARD WITH EVERY GIFT
-        </p>
+
+        <div className="hidden md:flex items-center gap-4 shrink-0">
+          {phone && (
+            <a href={`tel:${phone}`} className="flex items-center gap-1.5 hover:text-pink-200 transition-colors">
+              <Phone className="w-3 h-3" />
+              <span>{phone}</span>
+            </a>
+          )}
+          {email && (
+            <a href={`mailto:${email}`} className="flex items-center gap-1.5 hover:text-pink-200 transition-colors">
+              <Mail className="w-3 h-3" />
+              <span>{email}</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

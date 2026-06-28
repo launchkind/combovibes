@@ -1,0 +1,88 @@
+COMBOVIBES — ORDER WORKFLOW DIAGRAM
+=====================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER JOURNEY                             │
+└─────────────────────────────────────────────────────────────────┘
+
+  🛒 Cart  ──►  /checkout  ──►  POST /api/checkout
+                                      │
+                          ┌───────────▼───────────┐
+                          │   YOUR SERVER          │
+                          │  1. Re-fetch prices   │
+                          │  2. Check stock        │
+                          │  3. Create order row   │
+                          │  4. Call Cashfree API  │
+                          │  5. Get session_id     │
+                          └───────────┬───────────┘
+                                      │
+                          ┌───────────▼───────────┐
+                          │   CASHFREE MODAL       │
+                          │  UPI / Card / NB etc.  │
+                          └───────┬───────┬───────┘
+                                  │       │
+                          ✅ PAID │       │ ❌ FAILED
+                                  │       │
+                    ┌─────────────┘       └──────────────┐
+                    │                                     │
+        ┌───────────▼───────────┐            ┌───────────▼──────────┐
+        │  /api/webhook/cashfree│            │  order_status=failed  │
+        │  (Cashfree calls this)│            │  /checkout/failed     │
+        └───────────┬───────────┘            └──────────────────────┘
+                    │
+        ┌───────────▼──────────────────────────────────┐
+        │              YOUR SERVER                      │
+        │  1. Verify HMAC signature                    │
+        │  2. payment_status  = "paid"                 │
+        │  3. order_status    = "confirmed"            │
+        │  4. Decrement stock (Supabase RPC)           │
+        │  5. Create Shiprocket order → get AWB        │
+        │  6. order_status    = "processing"           │
+        │  7. Send email  (Resend)      ──► 📧 Buyer  │
+        │  8. Send WhatsApp (MSG91)     ──► 📱 Buyer  │
+        └───────────┬──────────────────────────────────┘
+                    │
+        ┌───────────▼───────────┐
+        │      SHIPROCKET        │
+        │  Pickup agent comes   │
+        │  to your warehouse    │
+        └───────────┬───────────┘
+                    │
+                    │  Package moves → Shiprocket calls:
+                    │
+        ┌───────────▼───────────┐
+        │ /api/webhook/shiprocket│
+        │  (auto status updates) │
+        └───────────┬───────────┘
+                    │
+         ┌──────────▼──────────────────────────┐
+         │         STATUS TIMELINE              │
+         │                                      │
+         │  pending ──► confirmed               │
+         │      ──► processing (picked up)      │
+         │      ──► shipped (in transit)        │
+         │      ──► out_for_delivery            │
+         │      ──► delivered  🎉               │
+         └──────────────────────────────────────┘
+                    │
+         ┌──────────▼──────────────────────────┐
+         │         VISIBLE TO                   │
+         │                                      │
+         │  👤 User  →  /account/orders/[id]   │
+         │              (timeline + tracking)   │
+         │                                      │
+         │  🔧 Admin →  /admin/orders/[id]     │
+         │              (full detail + AWB)     │
+         └──────────────────────────────────────┘
+
+
+=====================================
+KEY NOTES
+=====================================
+
+  - Cashfree webhook  →  triggers payment confirmation + Shiprocket creation
+  - Shiprocket webhook →  triggers status updates (shipped / delivered etc.)
+  - If Shiprocket fails after payment, admin can retry manually from /admin/orders/[id]
+  - Cart is cleared ONLY after payment_status = "paid" (never on order creation)
+  - Prices are always re-fetched from DB — client-sent prices are ignored
+  - Guest orders have user_id = NULL; accessible via order UUID only

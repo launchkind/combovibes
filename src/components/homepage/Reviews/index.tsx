@@ -1,130 +1,90 @@
 "use client";
 
-import React from "react";
-import * as motion from "framer-motion/client";
-import { cn } from "@/lib/utils";
-import { integralCF } from "@/styles/fonts";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
-import { useIsClient, useMediaQuery } from "usehooks-ts";
-import ReviewCard from "@/components/common/ReviewCard";
+import React, { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Review } from "@/types/review.types";
 
-type ReviewsProps = { data: Review[] };
+type Props = { data: Review[] };
 
-const Reviews = ({ data }: ReviewsProps) => {
-  const [api, setApi] = React.useState<CarouselApi>();
-  const [current, setCurrent] = React.useState(0);
-  const [count, setCount] = React.useState(0);
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const isClient = useIsClient();
+const avatarColors = [
+  "bg-pink-400", "bg-purple-400", "bg-blue-400",
+  "bg-green-400", "bg-orange-400", "bg-rose-400",
+];
 
-  React.useEffect(() => {
-    if (!api) {
-      return;
-    }
+const Stars = () => (
+  <div className="flex gap-0.5 my-1">
+    {[1,2,3,4,5].map((i) => (
+      <svg key={i} className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ))}
+  </div>
+);
 
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
+const Reviews = ({ data }: Props) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
-
-  if (!isClient) return null;
+  const scroll = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({ left: dir === "left" ? -340 : 340, behavior: "smooth" });
+  };
 
   return (
-    <section className="overflow-hidden">
-      <motion.div
-        initial={{ x: "100px", opacity: 0 }}
-        whileInView={{ x: "0", opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <Carousel
-          setApi={setApi}
-          opts={{
-            align: "center",
-            loop: true,
-          }}
-          className="relative w-full mb-6 md:mb-9"
-        >
-          <div className="relative flex items-end sm:items-center max-w-frame mx-auto mb-6 md:mb-10 px-4 xl:px-0">
-            <motion.h2
-              initial={{ y: "100px", opacity: 0 }}
-              whileInView={{ y: "0", opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className={cn([
-                integralCF.className,
-                "text-[32px] leading-[36px] md:text-5xl capitalize mr-auto",
-              ])}
-            >
-              OUR HAPPY CUSTOMERS
-            </motion.h2>
-            <div className="flex items-center space-x-1 ml-2">
-              <CarouselPrevious variant="ghost" className="text-2xl">
-                <FaArrowLeft />
-              </CarouselPrevious>
-              <CarouselNext variant="ghost" className="text-2xl">
-                <FaArrowRight />
-              </CarouselNext>
-            </div>
+    <section className="py-10 px-4 bg-white">
+      <div className="max-w-frame mx-auto">
+        {/* Heading */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-gray-400 text-sm">• •</span>
+            <span className="text-[#D81B60] text-lg">❤</span>
+            <h2 className="text-xl md:text-2xl font-black text-gray-800 tracking-wide uppercase">
+              What Our Customers Say
+            </h2>
+            <span className="text-[#D81B60] text-lg">❤</span>
+            <span className="text-gray-400 text-sm">• •</span>
           </div>
-          <CarouselContent>
-            {data.map((review, index) => (
-              <CarouselItem
+        </div>
+
+        {/* Carousel */}
+        <div className="relative">
+          <button
+            onClick={() => scroll("left")}
+            className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-[#D81B60] hover:text-white hover:border-[#D81B60] transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto pb-2 px-1"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {data.map((review, i) => (
+              <div
                 key={review.id}
-                className="w-full max-w-[358px] sm:max-w-[400px] pl-5"
+                className="shrink-0 w-[280px] sm:w-[320px] bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
               >
-                <ReviewCard
-                  className="h-full"
-                  data={review}
-                  blurChild={
-                    data.length >= 6 && (
-                      <div
-                        className={cn([
-                          isDesktop
-                            ? (current + 1 === count
-                                ? 0
-                                : current + 1 > count
-                                ? 1
-                                : current + 1) === index &&
-                              "backdrop-blur-[2px]"
-                            : (current === count ? 0 : current) === index &&
-                              "backdrop-blur-[2px]",
-                          isDesktop
-                            ? (current === 1
-                                ? count - 2
-                                : current === 2
-                                ? count - 1
-                                : current - 3) === index &&
-                              "backdrop-blur-[2px]"
-                            : (current === 1
-                                ? count - 1
-                                : current === 2
-                                ? 0
-                                : current - 2) === index &&
-                              "backdrop-blur-[2px]",
-                          "absolute bg-white/10 right-0 top-0 h-full w-full z-10",
-                        ])}
-                      />
-                    )
-                  }
-                />
-              </CarouselItem>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                    {review.user[0]}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-gray-800">{review.user}</p>
+                    <Stars />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">{review.content}</p>
+              </div>
             ))}
-          </CarouselContent>
-        </Carousel>
-      </motion.div>
+          </div>
+
+          <button
+            onClick={() => scroll("right")}
+            className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white border border-gray-200 rounded-full shadow flex items-center justify-center hover:bg-[#D81B60] hover:text-white hover:border-[#D81B60] transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </section>
   );
 };

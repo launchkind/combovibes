@@ -1,12 +1,138 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
-import Link from "next/link";
-import React from "react";
 import * as motion from "framer-motion/client";
 
-const Header = () => {
+export type HeroBanner = {
+  id: string;
+  title: string;
+  image_url: string;
+  mobile_image_url?: string | null;
+  link_url?: string | null;
+  link_target?: string | null;
+  cta_text?: string | null;
+  alt_text?: string | null;
+  title_color?: string | null;
+  title_text?: string | null;
+};
+
+type Props = {
+  heroBanners?: HeroBanner[];
+};
+
+export default function Header({ heroBanners = [] }: Props) {
+  const hasCms = heroBanners.length > 0;
+  const [current, setCurrent] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  const goTo = useCallback((idx: number) => {
+    setFading(true);
+    setTimeout(() => {
+      setCurrent(idx);
+      setFading(false);
+    }, 250);
+  }, []);
+
+  const next = useCallback(() => {
+    if (!hasCms) return;
+    goTo((current + 1) % heroBanners.length);
+  }, [current, heroBanners.length, hasCms, goTo]);
+
+  const prev = useCallback(() => {
+    if (!hasCms) return;
+    goTo((current - 1 + heroBanners.length) % heroBanners.length);
+  }, [current, heroBanners.length, hasCms, goTo]);
+
+  useEffect(() => {
+    if (!hasCms || heroBanners.length <= 1) return;
+    const t = setInterval(next, 5000);
+    return () => clearInterval(t);
+  }, [hasCms, heroBanners.length, next]);
+
+  const nav = hasCms && heroBanners.length > 1 ? (
+    <>
+      <button
+        onClick={prev}
+        style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", zIndex: 20, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+        aria-label="Previous"
+      >
+        <ChevronLeft size={20} color="#333" />
+      </button>
+      <button
+        onClick={next}
+        style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 20, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+        aria-label="Next"
+      >
+        <ChevronRight size={20} color="#333" />
+      </button>
+      <div style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8, zIndex: 20 }}>
+        {heroBanners.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{ width: i === current ? 24 : 10, height: 10, borderRadius: 5, background: i === current ? "#D81B60" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0 }}
+          />
+        ))}
+      </div>
+    </>
+  ) : null;
+
+  /* ── CMS banner carousel ── */
+  if (hasCms) {
+    const b = heroBanners[current];
+    return (
+      <div style={{ position: "relative", overflow: "hidden", minHeight: "520px", background: "linear-gradient(135deg, #FFE0EE 0%, #FFC2D9 50%, #FFD6E7 100%)" }}>
+        <Image
+          src={b.image_url}
+          alt={b.alt_text || ""}
+          fill
+          style={{ objectFit: "cover", opacity: fading ? 0 : 1, transition: "opacity 0.25s ease" }}
+          priority
+        />
+        <div style={{ position: "relative", zIndex: 10, maxWidth: "77.5rem", margin: "0 auto", padding: "80px 24px", minHeight: 520, display: "flex", alignItems: "center" }}>
+          <div style={{ opacity: fading ? 0 : 1, transition: "opacity 0.25s ease", maxWidth: 560 }}>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
+              {b.title}
+            </p>
+            <h1 style={{ fontFamily: "var(--font-dancing-script)", fontSize: "clamp(64px,9vw,96px)", fontWeight: 700, color: b.title_color || "#fff", lineHeight: 1.1, margin: "0 0 12px" }}>
+              {b.title_text || "Combo Vibes"}
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, marginBottom: 8 }}>
+              {b.alt_text || "Jewellery | Men & Women Accessories | Gift Combo"}
+            </p>
+            <p style={{ fontFamily: "var(--font-dancing-script)", color: "#ffc2d4", fontSize: "clamp(20px,3vw,28px)", fontStyle: "italic", marginBottom: 32 }}>
+              {b.cta_text || "For Every Vibe, For Everyone"}
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <Link
+                href={b.link_url || "/shop"}
+                style={{ background: "#D81B60", color: "#fff", fontWeight: 700, padding: "14px 32px", borderRadius: 50, fontSize: 14, textDecoration: "none", display: "inline-block", boxShadow: "0 4px 14px rgba(216,27,96,0.4)" }}
+              >
+                Shop Now
+              </Link>
+              <Link
+                href="/shop"
+                style={{ background: "transparent", color: "#fff", fontWeight: 700, padding: "12px 30px", borderRadius: 50, fontSize: 14, textDecoration: "none", border: "2px solid rgba(255,255,255,0.8)", display: "inline-block" }}
+              >
+                View Combos ↗
+              </Link>
+            </div>
+          </div>
+        </div>
+        {nav}
+      </div>
+    );
+  }
+
+  /* ── Static fallback ── */
   return (
     <header className="bg-gradient-to-br from-[#FFF5F7] to-[#FFF0F3] pt-10 md:pt-20 pb-10 md:pb-0 overflow-hidden">
       <div className="md:max-w-frame mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -138,6 +264,4 @@ const Header = () => {
       </div>
     </header>
   );
-};
-
-export default Header;
+}

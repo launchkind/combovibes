@@ -1,71 +1,61 @@
-import React from "react";
-import * as motion from "framer-motion/client";
-import { cn } from "@/lib/utils";
-import { integralCF } from "@/styles/fonts";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+"use client";
+
 import ProductCard from "./ProductCard";
 import { Product } from "@/types/product.types";
 import Link from "next/link";
 
-type ProductListSecProps = {
+type Props = {
   title: string;
+  subtitle?: string;
   data: Product[];
   viewAllLink?: string;
+  eyebrow?: string;
 };
 
-const ProductListSec = ({ title, data, viewAllLink }: ProductListSecProps) => {
+const ProductListSec = ({ title, subtitle, data, viewAllLink }: Props) => {
   return (
-    <section className="max-w-frame mx-auto text-center">
-      <motion.h2
-        initial={{ y: "100px", opacity: 0 }}
-        whileInView={{ y: "0", opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className={cn([
-          integralCF.className,
-          "text-[32px] md:text-5xl mb-8 md:mb-14 capitalize",
-        ])}
-      >
-        {title}
-      </motion.h2>
-      <motion.div
-        initial={{ y: "100px", opacity: 0 }}
-        whileInView={{ y: "0", opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.6, duration: 0.6 }}
-      >
-        <Carousel
-          opts={{
-            align: "start",
-          }}
-          className="w-full mb-6 md:mb-9"
-        >
-          <CarouselContent className="mx-4 xl:mx-0 space-x-4 sm:space-x-5">
-            {data.map((product) => (
-              <CarouselItem
-                key={product.id}
-                className="w-full max-w-[198px] sm:max-w-[295px] pl-0"
-              >
-                <ProductCard data={product} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-        {viewAllLink && (
-          <div className="w-full px-4 sm:px-0 text-center">
+    <section className="py-10 bg-white">
+      <div className="max-w-[1400px] mx-auto px-6">
+        {/* Header */}
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+            )}
+            <div className="mt-1.5 w-28 h-[3px] bg-gray-900 rounded-full" />
+          </div>
+          {viewAllLink && (
             <Link
               href={viewAllLink}
-              className="w-full inline-block sm:w-[218px] px-[54px] py-4 border rounded-full hover:bg-black hover:text-white text-black transition-all font-medium text-sm sm:text-base border-black/10"
+              className="text-[#D81B60] text-sm font-bold hover:underline shrink-0"
+            >
+              View All →
+            </Link>
+          )}
+        </div>
+
+        {/* Grid — matches OccasionSection card sizing */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {data.map((product) => (
+            <ProductCard key={product.id} data={product} />
+          ))}
+        </div>
+
+        {/* Mobile view all */}
+        {viewAllLink && (
+          <div className="text-center mt-6 md:hidden">
+            <Link
+              href={viewAllLink}
+              className="inline-block border-2 border-[#D81B60] text-[#D81B60] hover:bg-[#D81B60] hover:text-white font-bold px-7 py-2 rounded-full text-sm transition-all"
             >
               View All
             </Link>
           </div>
         )}
-      </motion.div>
+      </div>
     </section>
   );
 };

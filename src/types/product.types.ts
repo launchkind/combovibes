@@ -11,4 +11,6 @@ export type Product = {
   price: number;
   discount: Discount;
   rating: number;
+  badge?: "best-seller" | "new";
+  reviewCount?: number;
 };
