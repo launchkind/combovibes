@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
 import { DBProduct } from "@/types/category.types";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 const Stars = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
@@ -16,10 +17,13 @@ const Stars = ({ rating }: { rating: number }) => (
   </div>
 );
 
-const DBProductCard = ({ data }: { data: DBProduct }) => {
+const DBProductCard = ({ data, buttonColor }: { data: DBProduct; buttonColor?: string }) => {
   const addItem = useCartStore((s) => s.addItem);
+  const toggleWishlist = useWishlistStore((s) => s.toggleItem);
+  const isSaved = useWishlistStore((s) => s.isInWishlist(data.id));
   const hasDiscount = (data.discount_percent ?? 0) > 0;
   const productSlug = `/shop/product/${data.id}/${data.slug}`;
+  const accent = buttonColor || "#D81B60";
 
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 group w-full">
@@ -50,8 +54,14 @@ const DBProductCard = ({ data }: { data: DBProduct }) => {
           </span>
         )}
 
-        <button className="absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-[#D81B60] hover:text-white text-gray-400">
-          <Heart className="w-3.5 h-3.5" />
+        <button
+          onClick={() =>
+            toggleWishlist({ id: data.id, title: data.name, price: data.base_price, srcUrl: data.primary_image_url || "" })
+          }
+          aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-[#D81B60] hover:text-white ${isSaved ? "text-[#D81B60]" : "text-gray-400"}`}
+        >
+          <Heart className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} />
         </button>
       </div>
 
@@ -74,14 +84,27 @@ const DBProductCard = ({ data }: { data: DBProduct }) => {
           )}
         </div>
 
-        <button
-          onClick={() =>
-            addItem({ id: data.id, title: data.name, price: data.base_price, srcUrl: data.primary_image_url || "" })
-          }
-          className="w-full bg-[#D81B60] hover:bg-[#C2185B] text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              addItem({ id: data.id, title: data.name, price: data.base_price, srcUrl: data.primary_image_url || "" })
+            }
+            style={{ background: accent }}
+            className="flex-1 min-w-0 text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 hover:brightness-90"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+          </button>
+          <button
+            onClick={() =>
+              toggleWishlist({ id: data.id, title: data.name, price: data.base_price, srcUrl: data.primary_image_url || "" })
+            }
+            aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+            style={{ borderColor: accent, color: isSaved ? "#fff" : accent, background: isSaved ? accent : `${accent}1A` }}
+            className="shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all active:scale-95"
+          >
+            <Heart className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
     </div>
   );

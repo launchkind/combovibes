@@ -52,13 +52,17 @@ export default function CategoryForm({ defaultValues, categoryId }: Props) {
       sort_order: 0,
       is_active: true,
       color: "#D81B60",
+      title_color: "#D81B60",
+      button_color: "#D81B60",
       ...defaultValues,
     },
   });
 
-  const name     = watch("name");
-  const imageUrl = watch("image_url");
-  const color    = watch("color");
+  const name        = watch("name");
+  const imageUrl    = watch("image_url");
+  const color       = watch("color");
+  const titleColor  = watch("title_color");
+  const buttonColor = watch("button_color");
 
   async function onSubmit(values: CategoryFormValues) {
     setSaving(true);
@@ -153,6 +157,41 @@ export default function CategoryForm({ defaultValues, categoryId }: Props) {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Section Title Color</label>
+                <p className="text-[11px] text-gray-400 mb-1">Heading + heart/line accent on the homepage product section</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    {...register("title_color")}
+                    className="w-10 h-9 rounded border border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    {...register("title_color")}
+                    placeholder="#D81B60"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60] font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Add to Cart Button Color</label>
+                <p className="text-[11px] text-gray-400 mb-1">Applies to product cards in this section</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    {...register("button_color")}
+                    className="w-10 h-9 rounded border border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    {...register("button_color")}
+                    placeholder="#D81B60"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60] font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Sort Order</label>
               <input
@@ -234,6 +273,23 @@ export default function CategoryForm({ defaultValues, categoryId }: Props) {
                 style={{ background: color || "#D81B60" }}
               >
                 {name}
+              </div>
+              <div className="rounded-xl border border-gray-100 p-3 space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                  <span style={{ color: titleColor || "#D81B60" }}>♥</span>
+                  <div className="h-px flex-1 bg-gray-200" />
+                  <span className="text-xs font-black uppercase" style={{ color: titleColor || "#D81B60" }}>
+                    {name}
+                  </span>
+                  <div className="h-px flex-1 bg-gray-200" />
+                  <span style={{ color: titleColor || "#D81B60" }}>♥</span>
+                </div>
+                <div
+                  className="w-full text-center text-white text-xs font-bold py-1.5 rounded-lg"
+                  style={{ background: buttonColor || "#D81B60" }}
+                >
+                  Add to Cart
+                </div>
               </div>
               {imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element

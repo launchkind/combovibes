@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Review } from "@/types/review.types";
 
-type Props = { data: Review[] };
+type Props = { data: Review[]; titleColor?: string };
 
 const avatarColors = [
   "bg-pink-400", "bg-purple-400", "bg-blue-400",
@@ -21,8 +21,9 @@ const Stars = () => (
   </div>
 );
 
-const Reviews = ({ data }: Props) => {
+const Reviews = ({ data, titleColor }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const accent = titleColor || "#D81B60";
 
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({ left: dir === "left" ? -340 : 340, behavior: "smooth" });
@@ -35,11 +36,11 @@ const Reviews = ({ data }: Props) => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2">
             <span className="text-gray-400 text-sm">• •</span>
-            <span className="text-[#D81B60] text-lg">❤</span>
-            <h2 className="text-xl md:text-2xl font-black text-gray-800 tracking-wide uppercase">
+            <span style={{ color: accent }} className="text-lg">❤</span>
+            <h2 style={{ color: accent }} className="text-xl md:text-2xl font-black tracking-wide uppercase">
               What Our Customers Say
             </h2>
-            <span className="text-[#D81B60] text-lg">❤</span>
+            <span style={{ color: accent }} className="text-lg">❤</span>
             <span className="text-gray-400 text-sm">• •</span>
           </div>
         </div>

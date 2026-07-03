@@ -21,6 +21,9 @@ export type HeroBanner = {
   alt_text?: string | null;
   title_color?: string | null;
   title_text?: string | null;
+  tagline_color?: string | null;
+  subtitle_color?: string | null;
+  cta_text_color?: string | null;
 };
 
 type Props = {
@@ -99,28 +102,28 @@ export default function Header({ heroBanners = [] }: Props) {
         />
         <div style={{ position: "relative", zIndex: 10, maxWidth: "77.5rem", margin: "0 auto", padding: "80px 24px", minHeight: 520, display: "flex", alignItems: "center" }}>
           <div style={{ opacity: fading ? 0 : 1, transition: "opacity 0.25s ease", maxWidth: 560 }}>
-            <p style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
+            <p style={{ color: b.tagline_color || "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
               {b.title}
             </p>
-            <h1 style={{ fontFamily: "var(--font-dancing-script)", fontSize: "clamp(64px,9vw,96px)", fontWeight: 700, color: b.title_color || "#fff", lineHeight: 1.1, margin: "0 0 12px" }}>
+            <h1 style={{ fontFamily: "'Dancing Script', var(--font-dancing-script), cursive", fontSize: "clamp(32px,8vw,96px)", fontWeight: 700, color: b.title_color || "#fff", lineHeight: 1.1, margin: "0 0 12px", overflowWrap: "break-word" }}>
               {b.title_text || "Combo Vibes"}
             </h1>
-            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 16, marginBottom: 8 }}>
+            <p style={{ color: b.subtitle_color || "rgba(255,255,255,0.85)", fontSize: 16, marginBottom: 8 }}>
               {b.alt_text || "Jewellery | Men & Women Accessories | Gift Combo"}
             </p>
-            <p style={{ fontFamily: "var(--font-dancing-script)", color: "#ffc2d4", fontSize: "clamp(20px,3vw,28px)", fontStyle: "italic", marginBottom: 32 }}>
+            <p style={{ fontFamily: "'Dancing Script', var(--font-dancing-script), cursive", color: b.cta_text_color || "#ffc2d4", fontSize: "clamp(24px,3.5vw,34px)", fontStyle: "italic", marginBottom: 32 }}>
               {b.cta_text || "For Every Vibe, For Everyone"}
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <Link
                 href={b.link_url || "/shop"}
-                style={{ background: "#D81B60", color: "#fff", fontWeight: 700, padding: "14px 32px", borderRadius: 50, fontSize: 14, textDecoration: "none", display: "inline-block", boxShadow: "0 4px 14px rgba(216,27,96,0.4)" }}
+                style={{ background: "#D81B60", color: "#fff", fontWeight: 700, padding: "14px 32px", borderRadius: 12, fontSize: 14, textDecoration: "none", border: "2px solid transparent", display: "inline-block", boxShadow: "0 4px 14px rgba(216,27,96,0.4)" }}
               >
                 Shop Now
               </Link>
               <Link
                 href="/shop"
-                style={{ background: "transparent", color: "#fff", fontWeight: 700, padding: "12px 30px", borderRadius: 50, fontSize: 14, textDecoration: "none", border: "2px solid rgba(255,255,255,0.8)", display: "inline-block" }}
+                style={{ background: "#fff", color: "#000", fontWeight: 700, padding: "14px 32px", borderRadius: 12, fontSize: 14, textDecoration: "none", border: "2px solid rgba(255,255,255,0.8)", display: "inline-block" }}
               >
                 View Combos ↗
               </Link>
@@ -173,13 +176,13 @@ export default function Header({ heroBanners = [] }: Props) {
           >
             <Link
               href="/shop"
-              className="inline-block text-center bg-red-500 hover:bg-red-600 transition-all text-white px-8 py-3.5 text-sm font-bold rounded-full shadow-lg shadow-red-200"
+              className="inline-block text-center bg-red-500 hover:bg-red-600 transition-all text-white px-8 py-3.5 text-sm font-bold rounded-xl shadow-lg shadow-red-200"
             >
               SEND A GIFT NOW
             </Link>
             <Link
               href="/shop#same-day"
-              className="inline-block text-center border-2 border-black/20 hover:border-black/50 transition-all text-black px-8 py-3.5 text-sm font-semibold rounded-full"
+              className="inline-block text-center border-2 border-black/20 hover:border-black/50 transition-all text-black px-8 py-3.5 text-sm font-semibold rounded-xl"
             >
               SAME-DAY DELIVERY
             </Link>

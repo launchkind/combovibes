@@ -6,6 +6,8 @@ export type Category = {
   image_url: string | null;
   icon: string | null;
   color: string | null;
+  title_color: string | null;
+  button_color: string | null;
   show_on_homepage: boolean;
   show_in_navbar: boolean;
   show_after_hero: boolean;

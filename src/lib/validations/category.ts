@@ -7,6 +7,8 @@ export const categorySchema = z.object({
   image_url:     z.string().optional().nullable(),
   icon:          z.string().max(50).optional().nullable(),
   color:         z.string().max(20).optional().nullable(),
+  title_color:   z.string().max(20).optional().nullable(),
+  button_color:  z.string().max(20).optional().nullable(),
 
   show_on_homepage:  z.boolean(),
   show_in_navbar:    z.boolean(),

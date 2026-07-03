@@ -188,12 +188,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* You might also like */}
         {related.length > 0 && (
           <section>
-            <div className="flex items-end justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-black text-gray-900">YOU MIGHT ALSO LIKE</h2>
-                <div className="mt-1.5 w-28 h-[3px] bg-gray-900 rounded-full" />
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-gray-400 text-sm">• •</span>
+                <span className="text-[#D81B60] text-lg">❤</span>
+                <h2 className="text-xl md:text-2xl font-black tracking-wide uppercase text-gray-900">
+                  You Might Also Like
+                </h2>
+                <span className="text-[#D81B60] text-lg">❤</span>
+                <span className="text-gray-400 text-sm">• •</span>
               </div>
-              <Link href="/shop" className="text-[#D81B60] text-sm font-bold hover:underline">
+              <Link href="/shop" className="mt-2 inline-block text-[#D81B60] text-sm font-bold hover:underline">
                 View All →
               </Link>
             </div>

@@ -7,22 +7,21 @@ type Props = { categories: Category[] };
 export default function HeroCategories({ categories }: Props) {
   if (categories.length === 0) return null;
 
+  const visibleCategories = categories.slice(0, 7);
+
   return (
-    <section className="bg-white py-8 px-4 border-b border-gray-100">
-      <div className="max-w-frame mx-auto">
-        <div
-          className="flex items-start gap-3 sm:gap-5 overflow-x-auto pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {categories.map((cat) => (
+    <section className="bg-white py-8">
+      <div className="max-w-[1400px] mx-auto px-6">
+        <div className="flex flex-nowrap items-start justify-between gap-2 sm:gap-4">
+          {visibleCategories.map((cat) => (
             <Link
               key={cat.id}
               href={`/shop?category=${cat.slug}`}
-              className="flex flex-col items-center gap-2 shrink-0 group"
+              className="flex flex-col items-center gap-2 min-w-0 group"
             >
               <div
-                className="relative w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] rounded-[20px] overflow-hidden shadow-sm group-hover:shadow-md transition-shadow border border-gray-100"
-                style={{ background: cat.color || "#f7f3ee" }}
+                className="relative w-[60px] h-[60px] xs:w-[75px] xs:h-[75px] sm:w-[110px] sm:h-[110px] md:w-[140px] md:h-[140px] lg:w-[160px] lg:h-[160px] rounded-full overflow-hidden shadow-sm group-hover:shadow-md transition-shadow"
+                style={{ background: cat.color || "#fce4ec" }}
               >
                 {cat.image_url ? (
                   <Image
@@ -37,7 +36,7 @@ export default function HeroCategories({ categories }: Props) {
                   </div>
                 )}
               </div>
-              <span className="text-[11px] sm:text-xs font-semibold text-center text-gray-800 group-hover:text-[#D81B60] transition-colors leading-tight max-w-[100px] sm:max-w-[130px]">
+              <span className="text-xs xs:text-sm sm:text-base font-black text-center text-gray-900 group-hover:text-[#D81B60] transition-colors leading-tight max-w-[80px] sm:max-w-[130px]">
                 {cat.name}
               </span>
             </Link>

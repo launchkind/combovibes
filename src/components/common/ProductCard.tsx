@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
 import { Product } from "@/types/product.types";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 type Props = { data: Product };
 
@@ -33,6 +34,8 @@ const Stars = ({ rating }: { rating: number }) => (
 
 const ProductCard = ({ data }: Props) => {
   const addItem = useCartStore((s) => s.addItem);
+  const toggleWishlist = useWishlistStore((s) => s.toggleItem);
+  const isSaved = useWishlistStore((s) => s.isInWishlist(String(data.id)));
   const discountedPrice = getDiscountedPrice(data);
   const hasDiscount = data.discount.percentage > 0 || data.discount.amount > 0;
   const productSlug = `/shop/product/${data.id}/${data.title.split(" ").join("-")}`;
@@ -70,8 +73,14 @@ const ProductCard = ({ data }: Props) => {
         )}
 
         {/* Wishlist hover */}
-        <button className="absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-[#D81B60] hover:text-white text-gray-400">
-          <Heart className="w-3.5 h-3.5" />
+        <button
+          onClick={() =>
+            toggleWishlist({ id: String(data.id), title: data.title, price: discountedPrice, srcUrl: data.srcUrl })
+          }
+          aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute bottom-2.5 right-2.5 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-[#D81B60] hover:text-white ${isSaved ? "text-[#D81B60]" : "text-gray-400"}`}
+        >
+          <Heart className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} />
         </button>
       </div>
 
@@ -95,20 +104,33 @@ const ProductCard = ({ data }: Props) => {
           )}
         </div>
 
-        <button
-          onClick={() =>
-            addItem({
-              id: String(data.id),
-              title: data.title,
-              price: discountedPrice,
-              srcUrl: data.srcUrl,
-            })
-          }
-          className="w-full bg-[#D81B60] hover:bg-[#C2185B] text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          Add to Cart
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              addItem({
+                id: String(data.id),
+                title: data.title,
+                price: discountedPrice,
+                srcUrl: data.srcUrl,
+              })
+            }
+            className="flex-1 min-w-0 bg-[#D81B60] hover:bg-[#C2185B] text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Add to Cart
+          </button>
+          <button
+            onClick={() =>
+              toggleWishlist({ id: String(data.id), title: data.title, price: discountedPrice, srcUrl: data.srcUrl })
+            }
+            aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+            className={`shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all active:scale-95 ${
+              isSaved ? "bg-[#D81B60] border-[#D81B60] text-white" : "bg-[#D81B60]/10 border-[#D81B60] text-[#D81B60]"
+            }`}
+          >
+            <Heart className="w-3.5 h-3.5" fill={isSaved ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
     </div>
   );

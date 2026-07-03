@@ -14,6 +14,7 @@ type Props = {
 
 const placements = [
   { value: "hero", label: "Hero (Homepage Carousel)" },
+  { value: "promo_cards", label: "Promo Cards (3-Card Row After Categories)" },
   { value: "category", label: "Category Page" },
   { value: "occasion", label: "Occasion Page" },
   { value: "sidebar", label: "Sidebar" },
@@ -40,6 +41,7 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
       link_target: "_self",
       sort_order: 0,
       is_active: true,
+      bg_color: "#C2185B",
       ...defaultValues,
     },
   });
@@ -47,8 +49,13 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
   const imageUrl       = watch("image_url");
   const mobileImageUrl = watch("mobile_image_url");
   const placement      = watch("placement");
-  const titleColor     = watch("title_color") ?? "#ffffff";
   const isHero         = placement === "hero";
+  const isPromo        = placement === "promo_cards";
+  const titleColor     = watch("title_color") ?? (isPromo ? "#FFD700" : "#ffffff");
+  const bgColor        = watch("bg_color") ?? "#C2185B";
+  const taglineColor   = watch("tagline_color") ?? "#ffffff";
+  const subtitleColor  = watch("subtitle_color") ?? "#ffffff";
+  const ctaTextColor   = watch("cta_text_color") ?? "#ffc2d4";
 
   async function onSubmit(values: BannerFormValues) {
     setSaving(true);
@@ -97,6 +104,9 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
               {isHero && (
                 <span className="text-[10px] bg-blue-100 text-blue-600 font-semibold px-2 py-0.5 rounded">Hero Layout</span>
               )}
+              {isPromo && (
+                <span className="text-[10px] bg-pink-100 text-[#D81B60] font-semibold px-2 py-0.5 rounded">Promo Card Layout</span>
+              )}
             </div>
 
             {isHero && (
@@ -106,11 +116,18 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
               </div>
             )}
 
+            {isPromo && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800 space-y-1">
+                <p className="font-semibold">Promo card tip:</p>
+                <p>Upload a <strong>cut-out product image</strong> (transparent/plain background works best). It sits on the right side of the colored card. Set up to 3 active promo cards — only the first 3 (by Sort Order) show on the homepage.</p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">
-                {isHero ? "Background Image *" : "Desktop Image *"}
+                {isHero ? "Background Image *" : isPromo ? "Product Image *" : "Desktop Image *"}
                 <span className="text-gray-400 font-normal ml-1">
-                  {isHero ? "(fills the entire hero — recommended: 1920×700px wide landscape)" : "(recommended: 1920×600px)"}
+                  {isHero ? "(fills the entire hero — recommended: 1920×700px wide landscape)" : isPromo ? "(recommended: 500×500px, transparent PNG)" : "(recommended: 1920×600px)"}
                 </span>
               </label>
               <ImageUploader
@@ -118,34 +135,56 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
                 onChange={(url) => setValue("image_url", url)}
                 onClear={() => setValue("image_url", "")}
                 bucket="banner-images"
-                label={isHero ? "Upload hero background image" : "Upload desktop banner"}
+                label={isHero ? "Upload hero background image" : isPromo ? "Upload product image" : "Upload desktop banner"}
                 hint="JPG, PNG, WebP — max 10MB"
               />
               {errors.image_url && <p className="text-xs text-red-500 mt-1">{errors.image_url.message}</p>}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-2">
-                {isHero ? "Second Image" : "Mobile Image"}
-                <span className="text-gray-400 font-normal ml-1">
-                  {isHero ? "(optional — bottom-left square in collage)" : "(optional — recommended: 768×400px)"}
-                </span>
-              </label>
-              <ImageUploader
-                value={mobileImageUrl ?? ""}
-                onChange={(url) => setValue("mobile_image_url", url)}
-                onClear={() => setValue("mobile_image_url", "")}
-                bucket="banner-images"
-                label={isHero ? "Upload second image" : "Upload mobile banner"}
-                hint={isHero ? "Square crop works best" : "Different crop for mobile screens"}
-              />
-            </div>
+            {!isPromo && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  {isHero ? "Second Image" : "Mobile Image"}
+                  <span className="text-gray-400 font-normal ml-1">
+                    {isHero ? "(optional — bottom-left square in collage)" : "(optional — recommended: 768×400px)"}
+                  </span>
+                </label>
+                <ImageUploader
+                  value={mobileImageUrl ?? ""}
+                  onChange={(url) => setValue("mobile_image_url", url)}
+                  onClear={() => setValue("mobile_image_url", "")}
+                  bucket="banner-images"
+                  label={isHero ? "Upload second image" : "Upload mobile banner"}
+                  hint={isHero ? "Square crop works best" : "Different crop for mobile screens"}
+                />
+              </div>
+            )}
+
+            {isPromo && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Card Background Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={bgColor}
+                    onChange={(e) => setValue("bg_color", e.target.value)}
+                    className="w-10 h-10 rounded border border-gray-200 cursor-pointer p-0.5 shrink-0"
+                  />
+                  <input
+                    {...register("bg_color")}
+                    placeholder="#C2185B"
+                    maxLength={7}
+                    className="w-28 px-3 py-2 text-sm border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Details */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-4">
             <h3 className="text-sm font-bold text-gray-800">
-              {isHero ? "Hero Slide Text" : "Details"}
+              {isHero ? "Hero Slide Text" : isPromo ? "Promo Card Text" : "Details"}
             </h3>
 
             {isHero && (
@@ -159,27 +198,69 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
               </div>
             )}
 
+            {isPromo && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800 space-y-1">
+                <p className="font-semibold">How these fields appear on each promo card:</p>
+                <p>• <strong>Heading</strong> → top line (e.g. VALENTINE&apos;S DAY OFFER!)</p>
+                <p>• <strong>Highlight Line</strong> → big colored line (e.g. JUST ₹349 or Best Combos)</p>
+                <p>• <strong>Subtitle</strong> → small line below (e.g. Limited Time Only!)</p>
+                <p>• <strong>Button Text</strong> → e.g. Shop Now</p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
-                {isHero ? "Tag Line *" : "Internal Title *"}
+                {isHero ? "Tag Line *" : isPromo ? "Heading *" : "Internal Title *"}
               </label>
               <input
                 {...register("title")}
-                placeholder={isHero ? "e.g. LOVE | STYLE | HAPPINESS" : "e.g. Valentine Hero Banner – Feb 2026"}
+                placeholder={isHero ? "e.g. LOVE | STYLE | HAPPINESS" : isPromo ? "e.g. VALENTINE'S DAY OFFER!" : "e.g. Valentine Hero Banner – Feb 2026"}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
               />
               {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
+              {isHero && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="color"
+                    value={taglineColor}
+                    onChange={(e) => setValue("tagline_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5 shrink-0"
+                  />
+                  <input
+                    {...register("tagline_color")}
+                    placeholder="rgba(255,255,255,0.85)"
+                    className="w-40 px-3 py-1.5 text-xs border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                  />
+                  <span className="text-[10px] text-gray-400">Tag Line color</span>
+                </div>
+              )}
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
-                {isHero ? "Subtitle" : "Alt Text"}
+                {isHero ? "Subtitle" : isPromo ? "Subtitle" : "Alt Text"}
               </label>
               <input
                 {...register("alt_text")}
-                placeholder={isHero ? "e.g. Jewellery | Men & Women Accessories | Gift Combo" : "Describe the image for accessibility"}
+                placeholder={isHero ? "e.g. Jewellery | Men & Women Accessories | Gift Combo" : isPromo ? "e.g. Limited Time Only!" : "Describe the image for accessibility"}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
               />
+              {isHero && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="color"
+                    value={subtitleColor}
+                    onChange={(e) => setValue("subtitle_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5 shrink-0"
+                  />
+                  <input
+                    {...register("subtitle_color")}
+                    placeholder="rgba(255,255,255,0.85)"
+                    className="w-40 px-3 py-1.5 text-xs border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                  />
+                  <span className="text-[10px] text-gray-400">Subtitle color</span>
+                </div>
+              )}
             </div>
 
             <div>
@@ -191,6 +272,22 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
                 placeholder={isHero ? "e.g. For Every Vibe, For Everyone" : "e.g. Shop Now"}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
               />
+              {isHero && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="color"
+                    value={ctaTextColor}
+                    onChange={(e) => setValue("cta_text_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5 shrink-0"
+                  />
+                  <input
+                    {...register("cta_text_color")}
+                    placeholder="#ffc2d4"
+                    className="w-40 px-3 py-1.5 text-xs border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                  />
+                  <span className="text-[10px] text-gray-400">Italic Tagline color</span>
+                </div>
+              )}
             </div>
 
             {isHero && (
@@ -207,10 +304,23 @@ export default function BannerForm({ defaultValues, bannerId }: Props) {
               </div>
             )}
 
-            {isHero && (
+            {isPromo && (
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  &quot;Combo Vibes&quot; Title Color
+                  Highlight Line
+                </label>
+                <input
+                  {...register("title_text")}
+                  placeholder="e.g. JUST ₹349"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                />
+              </div>
+            )}
+
+            {(isHero || isPromo) && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  {isPromo ? "Highlight Line Color" : <>&quot;Combo Vibes&quot; Title Color</>}
                 </label>
                 <div className="flex items-center gap-2">
                   <input

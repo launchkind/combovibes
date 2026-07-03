@@ -9,6 +9,7 @@ export const metadata = { title: "Banners" };
 
 const placementColors: Record<string, string> = {
   hero: "bg-blue-100 text-blue-700",
+  promo_cards: "bg-pink-100 text-[#D81B60]",
   category: "bg-purple-100 text-purple-700",
   occasion: "bg-amber-100 text-amber-700",
   sidebar: "bg-gray-100 text-gray-600",

@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Heart, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import UserBtn from "./UserBtn";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { usePathname } from "next/navigation";
 import { Category } from "@/types/category.types";
 
@@ -53,6 +54,7 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [mounted,       setMounted]       = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
+  const wishlistCount = useWishlistStore((s) => s.items.length);
   const pathname   = usePathname();
   const navLinks   = buildNavLinks(navCategories);
 
@@ -137,9 +139,14 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
           {/* Wishlist */}
           <Link
             href="/account/wishlist"
-            className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full hover:bg-pink-50 transition-colors text-gray-700 hover:text-[#D81B60]"
+            className="hidden sm:relative sm:flex items-center justify-center w-9 h-9 rounded-full hover:bg-pink-50 transition-colors text-gray-700 hover:text-[#D81B60]"
           >
             <Heart className="w-[18px] h-[18px]" />
+            {mounted && wishlistCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#D81B60] text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                {wishlistCount > 9 ? "9+" : wishlistCount}
+              </span>
+            )}
           </Link>
 
           {/* Cart */}
@@ -163,7 +170,7 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
             href="https://wa.me/919608217057"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:flex items-center gap-2 bg-[#D81B60] hover:bg-[#C2185B] text-white text-[13px] font-bold px-4 py-2.5 rounded-full transition-colors shrink-0 ml-2"
+            className="hidden lg:flex items-center gap-2 bg-[#D81B60] hover:bg-[#C2185B] text-white text-[13px] font-bold px-4 py-2.5 rounded-xl transition-colors shrink-0 ml-2"
           >
             {WA_ICON}
             WhatsApp Order
@@ -221,7 +228,7 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
             href="https://wa.me/919608217057"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 mt-3 bg-[#D81B60] text-white text-sm font-bold px-4 py-3 rounded-full"
+            className="flex items-center justify-center gap-2 mt-3 bg-[#D81B60] text-white text-sm font-bold px-4 py-3 rounded-xl"
           >
             {WA_ICON}
             WhatsApp Order

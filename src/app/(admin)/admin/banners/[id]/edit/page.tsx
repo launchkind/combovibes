@@ -44,6 +44,12 @@ export default async function EditBannerPage({ params }: { params: Promise<{ id:
           is_active: banner.is_active,
           valid_from: banner.valid_from ? banner.valid_from.slice(0, 16) : undefined,
           valid_until: banner.valid_until ? banner.valid_until.slice(0, 16) : undefined,
+          title_color: banner.title_color,
+          title_text: banner.title_text,
+          bg_color: banner.bg_color,
+          tagline_color: banner.tagline_color,
+          subtitle_color: banner.subtitle_color,
+          cta_text_color: banner.cta_text_color,
         }}
       />
     </div>

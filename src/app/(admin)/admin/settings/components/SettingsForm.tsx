@@ -10,7 +10,10 @@ const LABELS: Record<string, string> = {
   phone: "Phone Number",
   email: "Contact Email",
   whatsapp: "WhatsApp Number (with country code, no +)",
+  reviews_title_color: "Customer Reviews Title Color",
 };
+
+const COLOR_KEYS = ["reviews_title_color"];
 
 export default function SettingsForm({ initial }: { initial: Setting[] }) {
   const [settings, setSettings] = useState<Setting[]>(initial);
@@ -57,6 +60,22 @@ export default function SettingsForm({ initial }: { initial: Setting[] }) {
               rows={2}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60] resize-none"
             />
+          ) : COLOR_KEYS.includes(s.key) ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={s.value}
+                onChange={(e) => update(s.key, e.target.value)}
+                className="w-10 h-9 rounded border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={s.value}
+                onChange={(e) => update(s.key, e.target.value)}
+                placeholder="#D81B60"
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60] font-mono"
+              />
+            </div>
           ) : (
             <input
               type="text"
