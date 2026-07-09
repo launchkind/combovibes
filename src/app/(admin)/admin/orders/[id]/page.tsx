@@ -1,13 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Package, MapPin, CreditCard, Truck, Clock } from "lucide-react";
+import { ChevronLeft, MapPin, CreditCard, Truck, Clock } from "lucide-react";
 import ShipButton from "./ShipButton";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_COLOR: Record<string, string> = {
   pending:          "bg-gray-100 text-gray-600",
+  blocked:          "bg-red-100 text-red-600",
   confirmed:        "bg-blue-100 text-blue-700",
   processing:       "bg-amber-100 text-amber-700",
   shipped:          "bg-purple-100 text-purple-700",
@@ -15,10 +16,28 @@ const STATUS_COLOR: Record<string, string> = {
   delivered:        "bg-green-100 text-green-700",
   cancelled:        "bg-red-100 text-red-600",
   returned:         "bg-orange-100 text-orange-700",
+  failed:           "bg-red-100 text-red-600",
 };
 
 const SLOT_LABELS: Record<string, string> = {
   morning: "8 AM – 12 PM", evening: "4 PM – 8 PM", midnight: "10 PM – 12 AM",
+};
+
+type ShipmentRow = {
+  id: string;
+  vendor_id: string | null;
+  vendor_name_snapshot: string;
+  status: string;
+  courier_name: string | null;
+  awb_code: string | null;
+  tracking_url: string | null;
+  shiprocket_order_id: number | null;
+  last_error: string | null;
+};
+
+type OrderItemRow = {
+  id: string; product_name: string; quantity: number;
+  unit_price: number; line_total: number; vendor_id: string | null;
 };
 
 export default async function AdminOrderDetailPage({
@@ -31,17 +50,26 @@ export default async function AdminOrderDetailPage({
 
   const { data: order, error } = await admin
     .from("orders")
-    .select("*, order_items(*), order_status_history(*)")
+    .select("*, order_items(*), order_status_history(*), shipments(*)")
     .eq("id", id)
     .order("created_at", { ascending: true, referencedTable: "order_status_history" })
     .single();
 
   if (error || !order) notFound();
 
-  const canShip = order.payment_status === "paid" && !order.shiprocket_order_id;
+  const shipments: ShipmentRow[] = order.shipments ?? [];
+  const items: OrderItemRow[] = order.order_items ?? [];
+
+  const itemsByVendor = new Map<string, OrderItemRow[]>();
+  for (const item of items) {
+    const key = item.vendor_id ?? "";
+    if (!itemsByVendor.has(key)) itemsByVendor.set(key, []);
+    itemsByVendor.get(key)!.push(item);
+  }
+
+  const canShipAny = order.payment_status === "paid" && shipments.some((s) => s.status !== "processing" && !["shipped", "out_for_delivery", "delivered"].includes(s.status));
   let disabledMsg = "";
   if (order.payment_status !== "paid") disabledMsg = "not paid";
-  else if (order.shiprocket_order_id)  disabledMsg = "already shipped";
 
   return (
     <div className="space-y-5">
@@ -60,7 +88,9 @@ export default async function AdminOrderDetailPage({
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${STATUS_COLOR[order.order_status]}`}>
             {order.order_status}
           </span>
-          <ShipButton orderId={id} disabled={!canShip} disabledMsg={disabledMsg} />
+          {shipments.length > 1 && (
+            <ShipButton orderId={id} disabled={!canShipAny} disabledMsg={disabledMsg} label="Retry All Shipments" />
+          )}
         </div>
       </div>
 
@@ -103,71 +133,79 @@ export default async function AdminOrderDetailPage({
           {order.paid_at && <p className="text-xs text-gray-400">Paid: {new Date(order.paid_at).toLocaleString("en-IN")}</p>}
         </div>
 
-        {/* Shipment */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-1">
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-            <Truck className="w-3.5 h-3.5" /> Shipment
-          </h2>
-          {order.shiprocket_order_id ? (
-            <>
-              <p className="text-sm text-gray-700">Courier: <strong>{order.courier_name}</strong></p>
-              <p className="text-sm text-gray-700">AWB: <strong>{order.awb_code}</strong></p>
-              <p className="text-xs text-gray-400">SR Order ID: {order.shiprocket_order_id}</p>
-              {order.tracking_url && (
-                <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
-                   className="text-xs text-[#D81B60] font-medium hover:underline">
-                  Track Package →
-                </a>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-gray-400">No shipment created yet</p>
-          )}
+          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Order Total</h2>
+          <p className="text-sm text-gray-600">Subtotal: ₹{Number(order.subtotal).toLocaleString("en-IN")}</p>
+          <p className="text-sm text-gray-600">Delivery: {Number(order.delivery_fee) === 0 ? "FREE" : `₹${Number(order.delivery_fee).toLocaleString("en-IN")}`}</p>
+          <p className="text-base font-black text-gray-900">Total: ₹{Number(order.total_amount).toLocaleString("en-IN")}</p>
         </div>
       </div>
 
-      {/* Items */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+      {/* Per-vendor shipments */}
+      <div className="space-y-4">
         <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-          <Package className="w-3.5 h-3.5" /> Order Items
+          <Truck className="w-3.5 h-3.5" /> Shipments {shipments.length > 0 && `(${shipments.length})`}
         </h2>
-        <table className="w-full text-sm">
-          <thead className="text-xs text-gray-500 border-b border-gray-100">
-            <tr>
-              <th className="text-left py-2">Product</th>
-              <th className="text-center py-2">Qty</th>
-              <th className="text-right py-2">Price</th>
-              <th className="text-right py-2">Total</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {(order.order_items ?? []).map((item: {
-              id: string; product_name: string; quantity: number;
-              unit_price: number; line_total: number;
-            }) => (
-              <tr key={item.id}>
-                <td className="py-2 text-gray-800">{item.product_name}</td>
-                <td className="py-2 text-center text-gray-600">{item.quantity}</td>
-                <td className="py-2 text-right text-gray-600">₹{Number(item.unit_price).toLocaleString("en-IN")}</td>
-                <td className="py-2 text-right font-medium text-gray-900">₹{Number(item.line_total).toLocaleString("en-IN")}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="border-t-2 border-gray-200">
-            <tr>
-              <td colSpan={2} />
-              <td className="py-2 text-right text-sm text-gray-500">Delivery</td>
-              <td className="py-2 text-right text-sm font-medium text-gray-700">
-                {Number(order.delivery_fee) === 0 ? "FREE" : `₹${Number(order.delivery_fee).toLocaleString("en-IN")}`}
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} />
-              <td className="py-2 text-right font-bold text-gray-900">Total</td>
-              <td className="py-2 text-right font-black text-gray-900 text-base">₹{Number(order.total_amount).toLocaleString("en-IN")}</td>
-            </tr>
-          </tfoot>
-        </table>
+
+        {shipments.length === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <p className="text-sm text-gray-400">No shipments created yet — shipments are created automatically once payment is confirmed.</p>
+          </div>
+        )}
+
+        {shipments.map((s) => {
+          const vendorItems = itemsByVendor.get(s.vendor_id ?? "") ?? [];
+          const canRetry = order.payment_status === "paid" && s.status !== "processing" && !["shipped", "out_for_delivery", "delivered"].includes(s.status);
+          let retryDisabledMsg = "";
+          if (order.payment_status !== "paid") retryDisabledMsg = "not paid";
+          else if (s.status === "processing" || ["shipped", "out_for_delivery", "delivered"].includes(s.status)) retryDisabledMsg = "already shipped";
+
+          return (
+            <div key={s.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-gray-900">{s.vendor_name_snapshot}</p>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[s.status] ?? "bg-gray-100 text-gray-600"}`}>
+                    {s.status}
+                  </span>
+                </div>
+                <ShipButton
+                  orderId={id}
+                  vendorId={s.vendor_id ?? undefined}
+                  disabled={!canRetry}
+                  disabledMsg={retryDisabledMsg}
+                  label={s.status === "blocked" || s.status === "failed" ? "Retry Shipment" : "Create Shipment"}
+                />
+              </div>
+
+              {s.status === "processing" || ["shipped", "out_for_delivery", "delivered"].includes(s.status) ? (
+                <div className="text-sm text-gray-700 space-y-0.5">
+                  <p>Courier: <strong>{s.courier_name}</strong></p>
+                  <p>AWB: <strong>{s.awb_code}</strong></p>
+                  {s.tracking_url && (
+                    <a href={s.tracking_url} target="_blank" rel="noopener noreferrer"
+                       className="text-xs text-[#D81B60] font-medium hover:underline inline-block mt-1">
+                      Track Package →
+                    </a>
+                  )}
+                </div>
+              ) : (s.status === "blocked" || s.status === "failed") && s.last_error ? (
+                <p className="text-xs text-red-500">{s.last_error}</p>
+              ) : null}
+
+              <table className="w-full text-sm border-t border-gray-100 pt-2">
+                <tbody className="divide-y divide-gray-50">
+                  {vendorItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="py-1.5 text-gray-700">{item.product_name} <span className="text-gray-400">×{item.quantity}</span></td>
+                      <td className="py-1.5 text-right font-medium text-gray-900">₹{Number(item.line_total).toLocaleString("en-IN")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
       </div>
 
       {/* Status History */}

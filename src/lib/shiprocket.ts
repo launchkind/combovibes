@@ -35,6 +35,41 @@ async function srFetch(path: string, init?: RequestInit): Promise<Response> {
   });
 }
 
+export interface AddPickupLocationParams {
+  pickup_location: string;
+  name:            string;
+  email:           string;
+  phone:           string;
+  address:         string;
+  address_2?:      string;
+  city:            string;
+  state:           string;
+  country:         string;
+  pin_code:        string;
+}
+
+export interface AddPickupLocationResult {
+  success?:   boolean;
+  pickup_id?: number;
+  address?:   Record<string, unknown>;
+}
+
+export async function addPickupLocation(
+  params: AddPickupLocationParams
+): Promise<AddPickupLocationResult> {
+  const res = await srFetch("/settings/company/addpickup", {
+    method: "POST",
+    body:   JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      `Shiprocket pickup location registration failed (${res.status}): ${(err as { message?: string }).message ?? JSON.stringify(err)}`
+    );
+  }
+  return res.json() as Promise<AddPickupLocationResult>;
+}
+
 export interface ShiprocketOrderPayload {
   order_id:               string;
   order_date:             string;
@@ -124,38 +159,43 @@ export async function trackByAWB(awbCode: string): Promise<unknown> {
   return res.json();
 }
 
-export function buildShiprocketPayload(order: {
-  order_number: string;
-  created_at: string;
-  sender_name: string;
-  sender_email: string;
-  sender_phone: string;
-  recipient_name: string;
-  recipient_phone: string;
-  delivery_line1: string;
-  delivery_line2: string | null;
-  delivery_city: string;
-  delivery_state: string;
-  delivery_pincode: string;
-  gift_message: string | null;
-  total_amount: number;
-  order_items?: Array<{
+export function buildShiprocketPayload(params: {
+  order: {
+    order_number: string;
+    created_at: string;
+    sender_name: string;
+    sender_email: string;
+    sender_phone: string;
+    recipient_name: string;
+    recipient_phone: string;
+    delivery_line1: string;
+    delivery_line2: string | null;
+    delivery_city: string;
+    delivery_state: string;
+    delivery_pincode: string;
+    gift_message: string | null;
+  };
+  items: Array<{
     product_id: string | null;
     product_name: string;
     unit_price: number;
     quantity: number;
   }>;
+  pickupLocation: string;
+  shiprocketOrderIdSuffix: string;
 }): ShiprocketOrderPayload {
+  const { order, items, pickupLocation, shiprocketOrderIdSuffix } = params;
   const senderFirst = order.sender_name.split(" ")[0];
   const senderLast  = order.sender_name.split(" ").slice(1).join(" ") || "-";
   const recipFirst  = order.recipient_name.split(" ")[0];
   const recipLast   = order.recipient_name.split(" ").slice(1).join(" ") || "-";
   const shipAddr    = order.delivery_line1 + (order.delivery_line2 ? " " + order.delivery_line2 : "");
+  const subTotal    = items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
 
   return {
-    order_id:               order.order_number,
+    order_id:               `${order.order_number}-${shiprocketOrderIdSuffix}`,
     order_date:             order.created_at,
-    pickup_location:        process.env.SHIPROCKET_PICKUP_LOCATION_NAME ?? "Primary",
+    pickup_location:        pickupLocation,
     channel_id:             "",
     comment:                order.gift_message ?? "",
     billing_customer_name:  senderFirst,
@@ -177,14 +217,14 @@ export function buildShiprocketPayload(order: {
     shipping_state:         order.delivery_state,
     shipping_email:         order.sender_email,
     shipping_phone:         order.recipient_phone,
-    order_items: (order.order_items ?? []).map((i) => ({
+    order_items: items.map((i) => ({
       name:          i.product_name,
       sku:           i.product_id ?? i.product_name.toLowerCase().replace(/\s+/g, "-"),
       units:         i.quantity,
       selling_price: String(i.unit_price),
     })),
     payment_method: "Prepaid",
-    sub_total:      order.total_amount,
+    sub_total:      subTotal,
     length:         15,
     breadth:        15,
     height:         10,

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Layers,
   Star,
+  Store,
 } from "lucide-react";
 
 const navItems = [
@@ -37,6 +38,15 @@ const navItems = [
     children: [
       { label: "All Categories", href: "/admin/categories" },
       { label: "Add Category", href: "/admin/categories/new" },
+    ],
+  },
+  {
+    label: "Vendors",
+    href: "/admin/vendors",
+    icon: Store,
+    children: [
+      { label: "All Vendors", href: "/admin/vendors" },
+      { label: "Add Vendor", href: "/admin/vendors/new" },
     ],
   },
   {

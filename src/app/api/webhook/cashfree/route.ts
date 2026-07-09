@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyCashfreeWebhookSignature } from "@/lib/cashfree";
-import { createShiprocketOrder, generateAWB, buildShiprocketPayload } from "@/lib/shiprocket";
+import { createShipmentsForOrder } from "@/lib/shipment-service";
 import { sendOrderConfirmationEmail, sendShippedEmail } from "@/lib/notifications/email";
 import { sendOrderConfirmationWhatsApp, sendShippedWhatsApp } from "@/lib/notifications/whatsapp";
 import type { Order } from "@/types/order.types";
@@ -82,37 +82,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create Shiprocket order + assign AWB
+    // Create per-vendor Shiprocket shipments
     try {
-      const srPayload = buildShiprocketPayload(order as Order);
-      const srOrder   = await createShiprocketOrder(srPayload);
-
-      // Auto-assign AWB (Shiprocket picks best courier)
-      await generateAWB(srOrder.shipment_id);
-
-      const awbCode    = srOrder.awb_code;
-      const trackingUrl = awbCode
-        ? `https://shiprocket.co/tracking/${awbCode}`
-        : null;
-
-      await admin.from("orders").update({
-        shiprocket_order_id:    srOrder.order_id,
-        shiprocket_shipment_id: srOrder.shipment_id,
-        awb_code:               awbCode,
-        courier_name:           srOrder.courier_name,
-        tracking_url:           trackingUrl,
-        order_status:           "processing",
-      }).eq("id", order.id);
-
-      await admin.from("order_status_history").insert({
-        order_id:   order.id,
-        status:     "processing",
-        note:       `Shipment created via ${srOrder.courier_name}. AWB: ${awbCode}`,
-        changed_by: "system",
-      });
+      const result = await createShipmentsForOrder(order.id, { actor: "system" });
+      if (result.anyFailed) {
+        console.error("[cashfree-webhook] Some vendor shipments failed/blocked:", result.results);
+      }
     } catch (srErr) {
       // Non-fatal: order is paid; admin can retry from the panel
-      console.error("[cashfree-webhook] Shiprocket creation failed:", srErr);
+      console.error("[cashfree-webhook] Shipment creation failed:", srErr);
     }
 
     // Fetch updated order for notifications

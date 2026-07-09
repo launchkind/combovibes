@@ -95,7 +95,32 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Tracking info */}
-      {order.awb_code && (
+      {order.shipments && order.shipments.length > 1 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h2 className="font-bold text-gray-900 flex items-center gap-2">
+            <Truck className="w-4 h-4 text-[#D81B60]" /> Tracking ({order.shipments.length} packages)
+          </h2>
+          {order.shipments.map((s) => (
+            <div key={s.id} className="space-y-1 border-t border-gray-100 pt-3 first:border-t-0 first:pt-0">
+              <p className="text-sm font-semibold text-gray-800">{s.vendor_name_snapshot}</p>
+              {s.awb_code ? (
+                <>
+                  <p className="text-sm text-gray-700">Courier: <strong>{s.courier_name}</strong></p>
+                  <p className="text-sm text-gray-700">AWB: <strong>{s.awb_code}</strong></p>
+                  {s.tracking_url && (
+                    <a href={s.tracking_url} target="_blank" rel="noopener noreferrer"
+                       className="inline-block text-sm text-[#D81B60] font-medium hover:underline mt-1">
+                      Track Package →
+                    </a>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">Preparing for dispatch…</p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : order.awb_code && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
           <h2 className="font-bold text-gray-900 flex items-center gap-2">
             <Truck className="w-4 h-4 text-[#D81B60]" /> Tracking

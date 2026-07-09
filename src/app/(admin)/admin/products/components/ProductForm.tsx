@@ -30,6 +30,9 @@ export default function ProductForm({ defaultValues, productId }: Props) {
   const [allCategories, setAllCategories] = useState<{ id: string; name: string; description: string | null }[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
+  // Vendors state
+  const [allVendors, setAllVendors] = useState<{ id: string; name: string; is_active: boolean }[]>([]);
+
   // Gallery images state (URLs in display order; first = primary)
   const [galleryImages, setGalleryImages] = useState<string[]>(
     defaultValues?.primary_image_url ? [defaultValues.primary_image_url] : []
@@ -39,6 +42,10 @@ export default function ProductForm({ defaultValues, productId }: Props) {
     fetch("/api/admin/categories")
       .then((r) => r.json())
       .then((json) => setAllCategories(json.data ?? []));
+
+    fetch("/api/admin/vendors")
+      .then((r) => r.json())
+      .then((json) => setAllVendors((json.data ?? []).filter((v: { is_active: boolean }) => v.is_active)));
 
     if (productId) {
       fetch(`/api/admin/products/${productId}/categories`)
@@ -87,7 +94,7 @@ export default function ProductForm({ defaultValues, productId }: Props) {
       : 0;
 
   function onInvalid(errs: Record<string, unknown>) {
-    const basicInfoFields = ["name", "slug", "short_description", "description", "badge"];
+    const basicInfoFields = ["name", "slug", "short_description", "description", "badge", "vendor_id"];
     const pricingFields = ["base_price", "mrp", "stock_quantity"];
     if (basicInfoFields.some((f) => errs[f])) {
       setActiveTab("Basic Info");
@@ -219,6 +226,21 @@ export default function ProductForm({ defaultValues, productId }: Props) {
                       placeholder="Brief description shown on product cards..."
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60] resize-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Vendor *</label>
+                    <select
+                      {...register("vendor_id")}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D81B60]/20 focus:border-[#D81B60]"
+                    >
+                      <option value="">Select a vendor…</option>
+                      {allVendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    </select>
+                    {errors.vendor_id && <p className="text-xs text-red-500 mt-1">{errors.vendor_id.message}</p>}
+                    {allVendors.length === 0 && (
+                      <p className="text-xs text-gray-400 mt-1">No vendors found. Add one under Vendors first.</p>
+                    )}
                   </div>
 
                   <div>

@@ -46,7 +46,7 @@ export default async function AdminOrdersPage({
   let query = admin
     .from("orders")
     .select(
-      "id, order_number, sender_name, sender_email, recipient_name, delivery_city, delivery_date, delivery_slot, order_status, payment_status, total_amount, awb_code, courier_name, created_at",
+      "id, order_number, sender_name, sender_email, recipient_name, delivery_city, delivery_date, delivery_slot, order_status, payment_status, total_amount, awb_code, courier_name, created_at, shipments(id)",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -136,6 +136,11 @@ export default async function AdminOrdersPage({
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[order.order_status]}`}>
                         {STATUS_LABEL[order.order_status]}
                       </span>
+                      {(order.shipments?.length ?? 0) > 1 && (
+                        <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          {order.shipments.length} vendors
+                        </span>
+                      )}
                     </td>
                     <td className={`px-4 py-3 text-xs ${PAYMENT_COLOR[order.payment_status]}`}>
                       {order.payment_status}

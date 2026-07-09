@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   const productIds = data.items.map((i) => i.id);
   const { data: dbProducts, error: dbErr } = await admin
     .from("products")
-    .select("id, name, base_price, stock_quantity, track_inventory, primary_image_url, status")
+    .select("id, name, base_price, stock_quantity, track_inventory, primary_image_url, status, vendor_id")
     .in("id", productIds)
     .eq("status", "active");
 
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
 
   type OrderItemInsert = {
     product_id: string;
+    vendor_id: string;
     product_name: string;
     product_image: string | null;
     unit_price: number;
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
     }
     orderItems.push({
       product_id:    item.id,
+      vendor_id:     product.vendor_id,
       product_name:  product.name,
       product_image: product.primary_image_url ?? null,
       unit_price:    Number(product.base_price),

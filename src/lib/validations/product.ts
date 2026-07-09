@@ -11,6 +11,7 @@ export const productSchema = z.object({
   description: z.string().optional().nullable(),
   base_price: z.number().positive("Price must be greater than 0"),
   mrp: z.number().positive("MRP must be greater than 0").optional().nullable(),
+  vendor_id: z.string().uuid("Select a vendor"),
   status: z.enum(["draft", "active", "archived"]),
   is_featured: z.boolean(),
   is_bestseller: z.boolean(),

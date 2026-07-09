@@ -32,6 +32,7 @@ export interface OrderItem {
   id: string;
   order_id: string;
   product_id: string | null;
+  vendor_id: string | null;
   product_name: string;
   product_image: string | null;
   unit_price: number;
@@ -91,4 +92,5 @@ export interface Order {
   updated_at: string;
   order_items?: OrderItem[];
   order_status_history?: OrderStatusHistory[];
+  shipments?: import("./vendor.types").Shipment[];
 }

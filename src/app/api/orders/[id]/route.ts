@@ -16,7 +16,7 @@ export async function GET(
 
   const { data: order, error } = await admin
     .from("orders")
-    .select("*, order_items(*), order_status_history(id, status, note, changed_by, created_at)")
+    .select("*, order_items(*), order_status_history(id, status, note, changed_by, created_at), shipments(id, vendor_name_snapshot, status, courier_name, awb_code, tracking_url)")
     .eq("id", id)
     .eq("user_id", user.id)
     .order("created_at", { ascending: true, referencedTable: "order_status_history" })

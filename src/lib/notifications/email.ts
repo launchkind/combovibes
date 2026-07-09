@@ -83,6 +83,33 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   }
 }
 
+export async function sendAdminShipmentAlertEmail(params: {
+  orderNumber: string;
+  vendorName:  string;
+  status:      "blocked" | "failed";
+  error:       string;
+}): Promise<void> {
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+  if (adminEmails.length === 0) return;
+
+  try {
+    await getResend().emails.send({
+      from:    FROM,
+      to:      adminEmails,
+      subject: `⚠️ Shipment ${params.status} — ${params.orderNumber} (${params.vendorName})`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+          <p>Order <strong>${params.orderNumber}</strong>'s shipment from vendor <strong>${params.vendorName}</strong> is <strong>${params.status}</strong>.</p>
+          <p style="color:#4b5563;font-size:14px">${params.error}</p>
+          <p style="font-size:13px;color:#6b7280">Check the order in the admin panel to retry.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("[email] sendAdminShipmentAlertEmail failed:", err);
+  }
+}
+
 export async function sendShippedEmail(order: Order): Promise<void> {
   try {
     const trackingSection = order.tracking_url
