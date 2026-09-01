@@ -6,16 +6,64 @@ import type { Order } from "@/types/order.types";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Shiprocket's tracking vocabulary is wider than the labels in their UI —
+ * mapping only a handful left real transitions (RTO, undelivered, pickup
+ * exceptions) silently dropped.
+ */
 const STATUS_MAP: Record<string, string> = {
-  "PICKED UP":        "processing",
-  "IN TRANSIT":       "shipped",
-  "OUT FOR DELIVERY": "out_for_delivery",
-  "DELIVERED":        "delivered",
-  "RTO INITIATED":    "returned",
-  "CANCELLED":        "cancelled",
+  "PICKUP SCHEDULED":        "processing",
+  "PICKUP GENERATED":        "processing",
+  "PICKUP QUEUED":           "processing",
+  "PICKED UP":               "processing",
+  "SHIPPED":                 "shipped",
+  "IN TRANSIT":              "shipped",
+  "OUT FOR DELIVERY":        "out_for_delivery",
+  "DELIVERED":               "delivered",
+  "RTO INITIATED":           "returned",
+  "RTO IN TRANSIT":          "returned",
+  "RTO DELIVERED":           "returned",
+  "RETURN PICKED UP":        "returned",
+  "RETURN DELIVERED":        "returned",
+  "CANCELED":                "cancelled",
+  "CANCELLED":               "cancelled",
 };
 
+/**
+ * Shiprocket signs webhooks with a token you set in their dashboard
+ * (Settings → API → Webhooks), sent as the `x-api-key` header.
+ *
+ * Without this check the endpoint accepted any anonymous POST, letting anyone
+ * who guessed an AWB mark orders delivered and fire customer notifications.
+ */
+function verifyWebhookToken(request: NextRequest): boolean {
+  const expected = process.env.SHIPROCKET_WEBHOOK_TOKEN?.trim();
+  if (!expected) return false;
+
+  const provided = request.headers.get("x-api-key")?.trim() ?? "";
+  if (provided.length !== expected.length) return false;
+
+  // Constant-time compare so the token can't be recovered byte by byte.
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export async function POST(request: NextRequest) {
+  if (!process.env.SHIPROCKET_WEBHOOK_TOKEN?.trim()) {
+    console.error(
+      "[shiprocket-webhook] SHIPROCKET_WEBHOOK_TOKEN is not set; rejecting. " +
+      "Set it here and in Shiprocket → Settings → API → Webhooks."
+    );
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
+
+  if (!verifyWebhookToken(request)) {
+    return NextResponse.json({ error: "Invalid webhook token" }, { status: 401 });
+  }
+
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ ok: true });
 
@@ -101,18 +149,31 @@ export async function POST(request: NextRequest) {
 
     if (fullOrder) {
       const o = fullOrder as Order;
-      sendShippedEmail(o);
-      if (o.awb_code && o.courier_name) {
-        sendShippedWhatsApp({
-          phone:       o.sender_phone,
-          orderNumber: o.order_number,
-          awbCode:     o.awb_code,
-          courierName: o.courier_name,
-          trackingUrl: o.tracking_url ?? `https://shiprocket.co/tracking/${o.awb_code}`,
-        });
-      }
+      // Awaited: in a serverless runtime the response ends the invocation, so
+      // fire-and-forget notifications can be killed before they're sent.
+      await Promise.allSettled([
+        sendShippedEmail(o),
+        o.awb_code && o.courier_name
+          ? sendShippedWhatsApp({
+              phone:       o.sender_phone,
+              orderNumber: o.order_number,
+              awbCode:     o.awb_code,
+              courierName: o.courier_name,
+              trackingUrl: o.tracking_url ?? `https://shiprocket.co/tracking/${o.awb_code}`,
+            })
+          : Promise.resolve(),
+      ]);
     }
   }
 
   return NextResponse.json({ ok: true });
+}
+
+/** Lets you confirm the endpoint is reachable and configured. */
+export async function GET() {
+  return NextResponse.json({
+    ok:              true,
+    endpoint:        "shiprocket-webhook",
+    tokenConfigured: Boolean(process.env.SHIPROCKET_WEBHOOK_TOKEN?.trim()),
+  });
 }

@@ -42,6 +42,15 @@ export interface OrderItem {
   greeting_card: string | null;
   selected_color: string | null;
   selected_size: string | null;
+  /**
+   * Shipping dimensions snapshotted from the product at order time, so editing
+   * a product later cannot change the parcel size of an order already shipped.
+   * NULL falls back to DEFAULT_PARCEL.
+   */
+  weight_kg: number | null;
+  length_cm: number | null;
+  breadth_cm: number | null;
+  height_cm: number | null;
   created_at: string;
 }
 

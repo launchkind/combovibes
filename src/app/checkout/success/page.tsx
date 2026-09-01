@@ -1,9 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, XCircle, Clock, Package, MapPin, Calendar } from "lucide-react";
+import { CheckCircle2, XCircle, Package, MapPin, Calendar } from "lucide-react";
 import ClearCartOnSuccess from "./ClearCartOnSuccess";
 import PendingView from "./PendingView";
+import { verifyOrderPayment } from "@/lib/order-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,13 @@ export default async function CheckoutSuccessPage({
   const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!order_id || !uuidRe.test(order_id)) notFound();
 
+  // Cashfree has just redirected the customer back here. Reconcile with the
+  // gateway before rendering so the confirmed page shows immediately, rather
+  // than waiting on a webhook that never arrives in sandbox/test mode.
+  await verifyOrderPayment(order_id).catch((err) => {
+    console.error("[checkout/success] verification failed:", err);
+  });
+
   const admin = createAdminClient();
   const { data: order } = await admin
     .from("orders")
@@ -32,6 +40,8 @@ export default async function CheckoutSuccessPage({
 
   if (!order) notFound();
 
+  // Still unresolved (e.g. a UPI collect request awaiting approval) — the client
+  // keeps polling the verify endpoint until it settles.
   if (order.payment_status === "pending") {
     return <PendingView orderId={order_id} />;
   }

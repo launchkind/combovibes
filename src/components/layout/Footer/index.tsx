@@ -88,9 +88,9 @@ const Footer = async () => {
   const settings = await getFooterSettings();
 
   const address = settings.address ?? "Islampur, West Bengal";
-  const phone = settings.phone ?? "9608217057";
+  const phone = settings.phone ?? "7810952116";
   const email = settings.email ?? "bussniseatau1@gmail.com";
-  const whatsapp = settings.whatsapp ?? "919608217057";
+  const whatsapp = settings.whatsapp ?? "917810952116";
   const instagramUrl = settings.instagram_url ?? "https://instagram.com";
 
   return (

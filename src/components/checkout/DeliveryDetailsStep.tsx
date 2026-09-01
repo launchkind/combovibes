@@ -24,8 +24,15 @@ function getTodayPlusDays(n: number) {
   d.setDate(d.getDate() + n);
   return d;
 }
+// Must format in LOCAL time. toISOString() converts to UTC, which in IST
+// (UTC+5:30) rolls the date back a day between 00:00 and 05:30 — the chip
+// would read "Tomorrow, 19 Aug" while the order stored 18 Aug, scheduling
+// delivery a full day early.
 function formatDate(d: Date) {
-  return d.toISOString().split("T")[0];
+  const year  = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day   = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 function labelDate(d: Date) {
   if (formatDate(d) === formatDate(new Date())) return "Today";

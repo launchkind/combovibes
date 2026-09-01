@@ -167,7 +167,7 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
 
           {/* WhatsApp Order button */}
           <a
-            href="https://wa.me/919608217057"
+            href="https://wa.me/917810952116"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden lg:flex items-center gap-2 bg-[#D81B60] hover:bg-[#C2185B] text-white text-[13px] font-bold px-4 py-2.5 rounded-xl transition-colors shrink-0 ml-2"
@@ -225,7 +225,7 @@ const TopNavbar = ({ navCategories = [] }: Props) => {
             )
           )}
           <a
-            href="https://wa.me/919608217057"
+            href="https://wa.me/917810952116"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 mt-3 bg-[#D81B60] text-white text-sm font-bold px-4 py-3 rounded-xl"

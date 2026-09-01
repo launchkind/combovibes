@@ -1,9 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildShiprocketPayload,
+  checkServiceability,
+  computeParcel,
   createShiprocketOrder,
   generateAWB,
+  schedulePickup,
 } from "@/lib/shiprocket";
+import type { PickupResult } from "@/lib/shiprocket";
 import { sendAdminShipmentAlertEmail } from "@/lib/notifications/email";
 import type { Order, OrderItem } from "@/types/order.types";
 import type { Vendor, VendorAddressSnapshot } from "@/types/vendor.types";
@@ -144,32 +148,60 @@ export async function createShipmentsForOrder(
     }
 
     try {
+      const parcel = computeParcel(groupItems);
+
+      // Fail fast on unserviceable routes. Shiprocket accepts the order first
+      // and only rejects at AWB assignment, which would leave an orphaned
+      // order sitting in their dashboard with no way to ship it.
+      const couriers = await checkServiceability({
+        pickupPincode:   vendor.pincode,
+        deliveryPincode: order.delivery_pincode,
+        weightKg:        parcel.weightKg,
+      });
+      if (couriers.length === 0) {
+        throw new Error(
+          `No courier serves ${vendor.pincode} -> ${order.delivery_pincode} at ${parcel.weightKg}kg`
+        );
+      }
+
       const payload = buildShiprocketPayload({
         order:                   order as Order,
         items:                   groupItems,
         pickupLocation:          vendor.shiprocket_pickup_location_name,
         shiprocketOrderIdSuffix: vendorId.slice(0, 6),
+        parcel,
       });
-      const srOrder = await createShiprocketOrder(payload);
-      await generateAWB(srOrder.shipment_id);
 
-      const awbCode     = srOrder.awb_code;
-      const trackingUrl = awbCode ? `https://shiprocket.co/tracking/${awbCode}` : null;
+      const srOrder = await createShiprocketOrder(payload);
+
+      // The AWB exists only in this response — order creation never returns one.
+      const awb = await generateAWB(srOrder.shipment_id);
 
       await admin.from("shipments").update({
         status:                 "processing",
         shiprocket_order_id:    srOrder.order_id,
         shiprocket_shipment_id: srOrder.shipment_id,
-        awb_code:               awbCode,
-        courier_name:           srOrder.courier_name,
-        tracking_url:           trackingUrl,
+        awb_code:               awb.awb_code,
+        courier_name:           awb.courier_name,
+        tracking_url:           awb.tracking_url,
         last_error:             null,
       }).eq("id", shipmentId);
+
+      // Best-effort: an AWB-assigned shipment is already valid, and many
+      // couriers auto-schedule, so a failure here must not fail the shipment.
+      const pickup = await schedulePickup([srOrder.shipment_id]).catch(
+        (e): PickupResult => ({ scheduled: false, message: String(e) })
+      );
+      if (!pickup.scheduled) {
+        console.warn("[shipment-service] pickup not scheduled:", pickup.message);
+      }
 
       await admin.from("order_status_history").insert({
         order_id:   orderId,
         status:     "processing",
-        note:       `Shipment created for vendor "${vendor.name}" via ${srOrder.courier_name}. AWB: ${awbCode}`,
+        note:       `Shipment created for vendor "${vendor.name}" via ${awb.courier_name}. ` +
+                    `AWB: ${awb.awb_code}` +
+                    (pickup.scheduled && pickup.date ? `. Pickup ${pickup.date}` : ""),
         changed_by: actor,
       });
 

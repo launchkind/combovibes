@@ -32,6 +32,30 @@ export type CheckoutFormData = {
   special_instructions: string;
 };
 
+/** Human-readable names for server-side validation errors. */
+const LABELS: Record<string, string> = {
+  sender_name:      "Your name",
+  sender_email:     "Your email",
+  sender_phone:     "Your phone",
+  recipient_name:   "Recipient name",
+  recipient_phone:  "Recipient phone",
+  delivery_line1:   "Address",
+  delivery_city:    "City",
+  delivery_state:   "State",
+  delivery_pincode: "Pincode",
+  delivery_date:    "Delivery date",
+  delivery_slot:    "Delivery slot",
+  items:            "Cart",
+};
+
+/** Fields collected on step 1, so a rejection can send the customer back there. */
+const STEP1_FIELDS = new Set([
+  "sender_name", "sender_email", "sender_phone",
+  "recipient_name", "recipient_phone",
+  "delivery_line1", "delivery_city", "delivery_state", "delivery_pincode",
+  "delivery_date", "delivery_slot",
+]);
+
 const EMPTY: CheckoutFormData = {
   sender_name: "", sender_email: "", sender_phone: "",
   recipient_name: "", recipient_phone: "",
@@ -50,20 +74,30 @@ export default function CheckoutPage() {
   const [placing,   setPlacing]   = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
 
-  // Pre-fill sender info for logged-in users
+  // Pre-fill sender info for logged-in users.
+  //
+  // This effect re-runs whenever the auth store re-emits `user` (hydration,
+  // token refresh), so it must only ever FILL BLANKS. Writing the metadata
+  // values unconditionally wiped whatever the customer had already typed —
+  // and since most accounts carry no full_name/phone, that meant submitting
+  // empty strings and a silent 422 on Place Order.
   useEffect(() => {
-    if (user) {
-      setFormData((d) => ({
-        ...d,
-        sender_name:  user.user_metadata?.full_name ?? "",
-        sender_email: user.email ?? "",
-        sender_phone: user.user_metadata?.phone ?? "",
-      }));
-      // Fetch saved addresses
-      fetch("/api/addresses")
-        .then((r) => r.json())
-        .then((j) => setAddresses(j.data ?? []));
-    }
+    if (!user) return;
+
+    setFormData((d) => ({
+      ...d,
+      sender_name:  d.sender_name  || (user.user_metadata?.full_name as string ?? ""),
+      sender_phone: d.sender_phone || (user.user_metadata?.phone as string ?? ""),
+      // The email input is hidden for logged-in users, so the session is
+      // authoritative here — but never blank out a value we already have.
+      sender_email: user.email ?? d.sender_email,
+    }));
+
+    // Fetch saved addresses
+    fetch("/api/addresses")
+      .then((r) => r.json())
+      .then((j) => setAddresses(j.data ?? []))
+      .catch(() => setAddresses([]));
   }, [user]);
 
   if (items.length === 0) {
@@ -123,10 +157,25 @@ export default function CheckoutPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        const msg = typeof json.error === "string"
-          ? json.error
-          : (json.error?.formErrors?.[0] ?? "Could not place order. Please try again.");
+        // Zod flattens to { formErrors: [], fieldErrors: { field: [msg] } }.
+        // Reading only formErrors left field-level failures invisible, so a
+        // rejected order looked like the button doing nothing at all.
+        const fieldErrors: Record<string, string[]> = json.error?.fieldErrors ?? {};
+        const firstField = Object.entries(fieldErrors)[0];
+
+        const msg =
+          typeof json.error === "string" ? json.error
+          : json.error?.formErrors?.[0] ? json.error.formErrors[0]
+          : firstField ? `${LABELS[firstField[0]] ?? firstField[0]}: ${firstField[1][0]}`
+          : "Could not place order. Please try again.";
+
         toast.error(msg);
+        if (json.detail) console.error("[checkout]", json.detail);
+        if (Object.keys(fieldErrors).length) console.error("[checkout] validation:", fieldErrors);
+
+        // Send them back to the step that owns the invalid field.
+        if (firstField && STEP1_FIELDS.has(firstField[0])) setStep(1);
+
         setPlacing(false);
         return;
       }
@@ -134,13 +183,19 @@ export default function CheckoutPage() {
       // Save order ID in session storage (fallback if redirect fails)
       sessionStorage.setItem("cv_order_id", json.orderId);
 
-      // Load Cashfree SDK and launch payment
+      // Load Cashfree SDK and launch payment. The mode comes from the server so
+      // a value the SDK doesn't accept (e.g. "development") can't reach it.
       const { load } = await import("@cashfreepayments/cashfree-js");
       const cashfree = await load({
-        mode: (process.env.NEXT_PUBLIC_CASHFREE_ENV ?? "sandbox") as "sandbox" | "production",
+        mode: json.cashfreeMode === "production" ? "production" : "sandbox",
       });
 
-      cashfree.checkout({
+      if (!cashfree) {
+        throw new Error("Cashfree SDK failed to initialise");
+      }
+
+      // Redirects away from this page; the success page confirms the payment.
+      await cashfree.checkout({
         paymentSessionId: json.paymentSessionId,
         redirectTarget:   "_self",
       });

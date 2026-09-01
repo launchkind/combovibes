@@ -1,9 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createCashfreeOrder } from "@/lib/cashfree";
+import { createCashfreeOrder, getCashfreeEnv } from "@/lib/cashfree";
 import { checkoutRequestSchema } from "@/lib/validations/checkout";
 import { getSessionUser } from "@/lib/supabase/getSessionUser";
 import { NextRequest, NextResponse } from "next/server";
 import { FREE_DELIVERY_THRESHOLD } from "@/lib/constants";
+import { hasShippingColumns, SHIPPING_COLUMNS } from "@/lib/shipping-columns";
+import type { ShippingDims } from "@/lib/shipping-columns";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +22,32 @@ export async function POST(request: NextRequest) {
   const user  = await getSessionUser();
   const admin = createAdminClient();
 
+  // Parcel dimensions are only available once migration 018 has been applied.
+  const withDims = await hasShippingColumns(admin);
+
   // Re-validate product prices + stock from DB
   const productIds = data.items.map((i) => i.id);
+  const baseCols = "id, name, base_price, stock_quantity, track_inventory, primary_image_url, status, vendor_id";
+
+  // The select list is built at runtime, so Supabase can't infer the row shape
+  // from a string literal — declare it instead.
+  type ProductRow = {
+    id:                string;
+    name:              string;
+    base_price:        number;
+    stock_quantity:    number;
+    track_inventory:   boolean;
+    primary_image_url: string | null;
+    status:            string;
+    vendor_id:         string | null;
+  } & Partial<ShippingDims>;
+
   const { data: dbProducts, error: dbErr } = await admin
     .from("products")
-    .select("id, name, base_price, stock_quantity, track_inventory, primary_image_url, status, vendor_id")
+    .select(withDims ? `${baseCols}, ${SHIPPING_COLUMNS.join(", ")}` : baseCols)
     .in("id", productIds)
-    .eq("status", "active");
+    .eq("status", "active")
+    .returns<ProductRow[]>();
 
   if (dbErr || !dbProducts) {
     return NextResponse.json({ error: "Failed to verify products" }, { status: 500 });
@@ -36,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   type OrderItemInsert = {
     product_id: string;
-    vendor_id: string;
+    vendor_id: string | null;
     product_name: string;
     product_image: string | null;
     unit_price: number;
@@ -45,7 +66,7 @@ export async function POST(request: NextRequest) {
     greeting_card?: string;
     selected_color?: string;
     selected_size?: string;
-  };
+  } & Partial<ShippingDims>;
 
   const orderItems: OrderItemInsert[] = [];
 
@@ -74,6 +95,15 @@ export async function POST(request: NextRequest) {
       greeting_card: item.greetingCard,
       selected_color: item.selectedColor,
       selected_size:  item.selectedSize,
+      // Only snapshot dimensions when the columns exist on both tables.
+      ...(withDims
+        ? {
+            weight_kg:  product.weight_kg  ?? null,
+            length_cm:  product.length_cm  ?? null,
+            breadth_cm: product.breadth_cm ?? null,
+            height_cm:  product.height_cm  ?? null,
+          }
+        : {}),
     });
   }
 
@@ -134,7 +164,14 @@ export async function POST(request: NextRequest) {
   });
 
   // Create Cashfree payment session
-  const returnUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?order_id=${order.id}`;
+  const siteUrl   = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const returnUrl = `${siteUrl}/checkout/success?order_id=${order.id}`;
+
+  // Cashfree rejects a notify_url it can't reach from the public internet, which
+  // would fail order creation outright during local testing. Omit it there — the
+  // return-URL verification path confirms the payment instead.
+  const isLocal   = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(siteUrl);
+  const notifyUrl = isLocal ? undefined : `${siteUrl}/api/webhook/cashfree`;
 
   let paymentSessionId: string;
   let cfOrderId: string;
@@ -147,13 +184,23 @@ export async function POST(request: NextRequest) {
       customerEmail: data.sender_email,
       customerPhone: data.sender_phone,
       returnUrl,
+      notifyUrl,
     });
     paymentSessionId = cf.payment_session_id;
     cfOrderId        = cf.cf_order_id;
   } catch (err) {
     await admin.from("orders").delete().eq("id", order.id);
     console.error("[checkout] Cashfree order creation failed:", err);
-    return NextResponse.json({ error: "Payment session could not be created" }, { status: 502 });
+    return NextResponse.json(
+      {
+        error: "Payment session could not be created",
+        // Surfaced in dev only so a bad key/mode is obvious instead of silent.
+        ...(process.env.NODE_ENV !== "production"
+          ? { detail: err instanceof Error ? err.message : String(err) }
+          : {}),
+      },
+      { status: 502 }
+    );
   }
 
   await admin
@@ -162,7 +209,15 @@ export async function POST(request: NextRequest) {
     .eq("id", order.id);
 
   return NextResponse.json(
-    { orderId: order.id, orderNumber: order.order_number, paymentSessionId, totalAmount },
+    {
+      orderId:     order.id,
+      orderNumber: order.order_number,
+      paymentSessionId,
+      totalAmount,
+      // Authoritative SDK mode — NEXT_PUBLIC_CASHFREE_ENV may hold a value the
+      // browser SDK doesn't accept (e.g. "development"), so normalise it here.
+      cashfreeMode: getCashfreeEnv(),
+    },
     { status: 201 }
   );
 }

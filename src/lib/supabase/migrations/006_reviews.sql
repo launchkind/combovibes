@@ -45,7 +45,7 @@ CREATE POLICY "site_settings_public_read" ON public.site_settings
 INSERT INTO public.site_settings (key, value) VALUES
   ('banner_text',    'Welcome to Combo Vibes – Style Meets Gifting ✨'),
   ('address',        'Islampur, West Bengal'),
-  ('phone',          '9608217057'),
-  ('whatsapp',       '919608217057'),
+  ('phone',          '7810952116'),
+  ('whatsapp',       '917810952116'),
   ('email',          'bussniseatau1@gmail.com')
 ON CONFLICT (key) DO NOTHING;
